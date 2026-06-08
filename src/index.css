@@ -1,0 +1,57 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-primary-50: var(--color-indigo-50);
+  --color-primary-100: var(--color-indigo-100);
+  --color-primary-200: var(--color-indigo-200);
+  --color-primary-300: var(--color-indigo-300);
+  --color-primary-400: var(--color-indigo-400);
+  --color-primary-500: var(--color-indigo-500);
+  --color-primary-600: var(--color-indigo-600);
+  --color-primary-700: var(--color-indigo-700);
+  --color-primary-800: var(--color-indigo-800);
+  --color-primary-900: var(--color-indigo-900);
+
+  --color-surface-50: var(--color-slate-50);
+  --color-surface-100: var(--color-slate-100);
+  --color-surface-200: var(--color-slate-200);
+  --color-surface-300: var(--color-slate-300);
+  --color-surface-400: var(--color-slate-400);
+  --color-surface-500: var(--color-slate-500);
+  --color-surface-600: var(--color-slate-600);
+  --color-surface-700: var(--color-slate-700);
+  --color-surface-800: var(--color-slate-800);
+  --color-surface-900: var(--color-slate-900);
+  --color-surface-950: var(--color-slate-950);
+}
+
+body {
+  @apply bg-surface-50 text-surface-900 antialiased font-sans;
+}
+
+/* Hide scrollbar for elements with scrollbar-hide class */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-surface-100;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-surface-300 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-surface-400;
+}
