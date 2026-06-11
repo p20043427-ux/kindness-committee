@@ -245,19 +245,27 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
                   </div>
                 </div>
               ) : (
-                /* 일반 카테고리: 슬라이더 */
-                <>
-                  <p className="text-xs text-surface-400">{cat.details}</p>
-                  <input
-                    type="range"
-                    min={0}
-                    max={cat.max}
-                    step={1}
-                    value={scores[cat.key]}
-                    onChange={(e) => setScore(cat.key as CategoryKey, Number(e.target.value))}
-                    className="w-full accent-primary-600 cursor-pointer"
-                  />
-                </>
+                /* 비중점 카테고리: 한 줄 간략 입력 */
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setScore(cat.key as CategoryKey, Math.max(0, scores[cat.key] - 1))}
+                    className="w-7 h-7 rounded-md border border-surface-200 bg-white text-surface-600 hover:bg-surface-100 font-bold flex items-center justify-center text-base leading-none"
+                  >−</button>
+                  <div className="flex-1 relative">
+                    <div className="h-1.5 bg-surface-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-surface-300 rounded-full transition-all duration-200"
+                        style={{ width: `${(scores[cat.key] / cat.max) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setScore(cat.key as CategoryKey, Math.min(cat.max, scores[cat.key] + 1))}
+                    className="w-7 h-7 rounded-md border border-surface-200 bg-white text-surface-600 hover:bg-surface-100 font-bold flex items-center justify-center text-base leading-none"
+                  >+</button>
+                </div>
               )}
             </div>
           );
