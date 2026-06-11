@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { KINDNESS_CATEGORIES, CategoryKey } from "@/src/lib/data";
+import { CategoryKey } from "@/src/lib/data";
 import { supabase } from "@/src/lib/supabase";
 import { computeStatus, CategoryScores } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import { useSettings } from "@/src/components/layout/SettingsProvider";
 
 interface InlineInputFormProps {
   buildingId: string;
@@ -21,8 +22,11 @@ const initialScores: CategoryScores = { greeting: 7, response: 7, phone: 7, appe
 export function InlineInputForm({ buildingId, departmentId, inspectionDate, defaultInspector = "", defaultFocus = "", members = [], onSuccess, onCancel }: InlineInputFormProps) {
   const { user } = useAuth();
   const { buildings, departments } = useOrganization();
+  const { categories, getFocusForMonth } = useSettings();
+  // 시스템 설정의 월별 중점사항 (점검일 기준)
+  const monthFocus = getFocusForMonth(inspectionDate.slice(0, 7));
   const [inspector, setInspector] = useState(defaultInspector);
-  const [focusCategory, setFocusCategory] = useState(defaultFocus);
+  const [focusCategory, setFocusCategory] = useState(defaultFocus || monthFocus);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -35,8 +39,9 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
   }, [defaultInspector]);
 
   useEffect(() => {
-    if (defaultFocus && !focusCategory) setFocusCategory(defaultFocus);
-  }, [defaultFocus]);
+    const auto = defaultFocus || monthFocus;
+    if (auto && !focusCategory) setFocusCategory(auto);
+  }, [defaultFocus, monthFocus]);
 
   const [scores, setScores] = useState<CategoryScores>(initialScores);
 
@@ -127,15 +132,17 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
             onChange={(e) => setFocusCategory(e.target.value)}
           >
             <option value="">중점사항 선택 (선택)</option>
-            {KINDNESS_CATEGORIES.map(c => (
-              <option key={c.key} value={c.key}>{c.name}</option>
+            {categories.map(c => (
+              <option key={c.key} value={c.key}>
+                {c.name}{monthFocus === c.key ? " (이번 달 중점)" : ""}
+              </option>
             ))}
           </select>
         </div>
       </div>
 
       <div className="space-y-5">
-        {KINDNESS_CATEGORIES.map(cat => (
+        {categories.map(cat => (
           <div key={cat.key} className="flex flex-col space-y-2">
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-semibold text-surface-800">

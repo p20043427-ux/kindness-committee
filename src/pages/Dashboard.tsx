@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Ca
 import { supabase } from "@/src/lib/supabase";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import { useSettings } from "@/src/components/layout/SettingsProvider";
 
 export function Dashboard() {
   const { user } = useAuth();
   const { isLoading: orgLoading } = useOrganization();
+  const { categories, getFocusForMonth } = useSettings();
   const [schedules, setSchedules] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,9 +70,26 @@ export function Dashboard() {
     { to: "/admin", icon: "⚙️", label: "시스템 설정", color: "bg-slate-100 text-slate-700" },
   ];
 
+  const currentYm = new Date().toISOString().slice(0, 7);
+  const focusKey = getFocusForMonth(currentYm);
+  const focusCategory = categories.find(c => c.key === focusKey);
+
   return (
     <div className="animate-in fade-in duration-500 flex-1 flex flex-col items-stretch 2xl:min-h-0">
-      
+
+      {/* 이번 달 중점사항 배너 */}
+      {focusCategory && (
+        <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-teal-50 border border-teal-200">
+          <span className="text-2xl">🎯</span>
+          <div>
+            <p className="text-sm font-bold text-teal-800">
+              {new Date().getMonth() + 1}월 중점사항: {focusCategory.name}
+            </p>
+            <p className="text-xs text-teal-600 mt-0.5">{focusCategory.details}</p>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Menu View */}
       <div className="lg:hidden flex flex-col gap-4">
         <h2 className="text-xl font-bold text-surface-900 px-1 border-l-4 border-primary-500 pl-3">메뉴</h2>
