@@ -158,6 +158,14 @@ export function YearlyReport() {
       .sort((a, b) => b.avg! - a.avg!);
   }, [records, departments]);
 
+  /* ── 점수 스케일 감지 (구 50점 데이터 vs 신 10점 데이터) ── */
+  const scoreMax = useMemo(() => {
+    const valid = records.filter(r => r.totalScore > 0);
+    if (!valid.length) return 10;
+    const max = Math.max(...valid.map(r => r.totalScore));
+    return max > 10 ? 50 : 10;
+  }, [records]);
+
   /* ── KPI ── */
   const kpi = useMemo(() => {
     const valid = records.filter(r => r.totalScore > 0);
@@ -227,7 +235,7 @@ export function YearlyReport() {
           <CardContent className="pt-5">
             <p className="text-xs text-surface-500 font-medium">전체 평균 점수</p>
             <p className="text-3xl font-bold text-primary-600 mt-1">
-              {kpi.totalAvg !== null ? kpi.totalAvg : "—"}<span className="text-base text-surface-400 ml-1">/ 10</span>
+              {kpi.totalAvg !== null ? kpi.totalAvg : "—"}<span className="text-base text-surface-400 ml-1">/ {scoreMax}</span>
             </p>
             <p className="text-xs text-surface-400 mt-1">중점사항 카테고리 기준</p>
           </CardContent>
@@ -292,7 +300,7 @@ export function YearlyReport() {
                 <BarChart data={monthlyData} margin={{ top: 20, right: 10, left: -10, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <YAxis domain={[0, 10]} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                  <YAxis domain={[0, scoreMax]} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
                   <Tooltip
                     cursor={{ fill: "#f8fafc" }}
                     contentStyle={{ borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "13px" }}
@@ -341,7 +349,7 @@ export function YearlyReport() {
                       margin={{ top: 5, right: 50, left: 10, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                      <XAxis type="number" domain={[0, 10]} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                      <XAxis type="number" domain={[0, scoreMax]} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
                       <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 13, fontWeight: 600 }} width={80} />
                       <Tooltip
                         cursor={{ fill: "#f8fafc" }}
@@ -377,7 +385,7 @@ export function YearlyReport() {
                     <BarChart data={buildingData} margin={{ top: 20, right: 10, left: -10, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 13 }} />
-                      <YAxis domain={[0, 10]} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                      <YAxis domain={[0, scoreMax]} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
                       <Tooltip
                         cursor={{ fill: "#f8fafc" }}
                         contentStyle={{ borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "13px" }}
@@ -457,7 +465,7 @@ export function YearlyReport() {
                     <div className="space-y-2">
                       {[...deptData].reverse().slice(0, 10).map((dept, i) => {
                         const building = buildings.find(b => b.id === dept.buildingId);
-                        const pct = ((dept.avg! / 10) * 100).toFixed(0);
+                        const pct = Math.min(100, ((dept.avg! / scoreMax) * 100)).toFixed(0);
                         return (
                           <div key={dept.id} className="flex items-center gap-3">
                             <span className="w-6 text-xs font-bold text-rose-300 text-right shrink-0">{i + 1}</span>
