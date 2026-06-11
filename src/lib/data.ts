@@ -71,19 +71,77 @@ export const MOCK_DEPARTMENTS = [
 // 친절점검표 5개 카테고리 (각 10점 만점, 총 50점). 월별로 중점사항으로 운영됨.
 export type CategoryKey = "greeting" | "response" | "phone" | "appearance" | "environment";
 
+export interface SubCriterion {
+  key: string;
+  name: string;
+  max: number;     // 이 세부항목의 배점
+  items: string[]; // 체크리스트 안내문
+}
+
 export interface InspectionCategory {
   key: CategoryKey;
   name: string;
   max: number;
-  details: string; // 세부 평가 항목 안내
+  details: string;
+  subCriteria: SubCriterion[];
 }
 
 export const KINDNESS_CATEGORIES: InspectionCategory[] = [
-  { key: "greeting", name: "인사예절", max: 10, details: "첫인사 · 끝인사 · 먼저인사 (눈맞춤)" },
-  { key: "response", name: "응대스킬", max: 10, details: "표정(미소/눈맞춤) · 정확한 설명(호칭) · 쿠션언어" },
-  { key: "phone", name: "전화응대", max: 10, details: "3번 이내 받기 · 최초응대(소속) · 끝인사" },
-  { key: "appearance", name: "용모복장", max: 10, details: "두발 · 유니폼 · 손톱/악세사리" },
-  { key: "environment", name: "병원환경/불만고객", max: 10, details: "친절교육책자 · 유인물 비치 · 대기시간 설명" },
+  {
+    key: "greeting",
+    name: "인사예절",
+    max: 10,
+    details: "첫인사 · 끝인사 · 먼저인사 (눈맞춤)",
+    subCriteria: [
+      { key: "first",     name: "첫인사",   max: 3, items: ["맞이 인사를 잘 하는가", "눈맞춤 잘 하는가"] },
+      { key: "last",      name: "끝인사",   max: 4, items: ["배웅 인사를 잘 하는가", "눈맞춤을 잘 하는가"] },
+      { key: "proactive", name: "먼저 인사", max: 3, items: ["눈이 마주쳤을 때 먼저 인사 하는가"] },
+    ],
+  },
+  {
+    key: "response",
+    name: "응대스킬",
+    max: 10,
+    details: "표정(미소/눈맞춤) · 정확한 설명(호칭) · 쿠션언어",
+    subCriteria: [
+      { key: "expression",  name: "표정",          max: 4, items: ["온화한 미소", "눈맞춤"] },
+      { key: "explanation", name: "정확한 설명",    max: 4, items: ["호칭사용/상세설명"] },
+      { key: "cushion",     name: "쿠션언어 사용",  max: 2, items: ["쿠션화법사용"] },
+    ],
+  },
+  {
+    key: "phone",
+    name: "전화응대",
+    max: 10,
+    details: "3번 이내 받기 · 최초응대(소속) · 끝인사",
+    subCriteria: [
+      { key: "pickup",  name: "바로 받기",  max: 4, items: ["3번 이내 받는다", "정확히 소속 밝힘"] },
+      { key: "initial", name: "최초 응대",  max: 4, items: ["감사합니다", "소속 또박또박"] },
+      { key: "closing", name: "끝인사",     max: 2, items: ["먼저 끊지 않기", "끝인사하기"] },
+    ],
+  },
+  {
+    key: "appearance",
+    name: "용모복장",
+    max: 10,
+    details: "두발 · 유니폼 · 손톱/악세사리",
+    subCriteria: [
+      { key: "hair",    name: "두발상태", max: 4, items: ["청결하고 단정한가", "업무방해 유무"] },
+      { key: "uniform", name: "유니폼",   max: 3, items: ["단정한 복장", "구겨지거나 신발구겨짐"] },
+      { key: "nails",   name: "손톱",     max: 3, items: ["손톱길이 적당", "젤네일 화려한가", "화려한 악세사리"] },
+    ],
+  },
+  {
+    key: "environment",
+    name: "병원환경/불만고객",
+    max: 10,
+    details: "친절교육책자 · 유인물 비치 · 대기시간 설명",
+    subCriteria: [
+      { key: "booklet",   name: "친절교육책자",   max: 4, items: ["친절교육책자 비치", "불만고객응대매뉴얼", "VOC 불편사항 안내게시물"] },
+      { key: "materials", name: "유인물비치상태", max: 4, items: ["대기실내 유인물유무", "정리정돈"] },
+      { key: "waiting",   name: "대기시간 설명",  max: 2, items: ["대기시간 설명", "고객배려표현(기다려주셔서 감사합니다)"] },
+    ],
+  },
 ];
 
 export const MAX_TOTAL_SCORE = 50; // 5개 카테고리 × 10점

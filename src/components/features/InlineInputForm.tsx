@@ -23,19 +23,18 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
   const { user } = useAuth();
   const { buildings, departments } = useOrganization();
   const { categories, getFocusForMonth } = useSettings();
+
   // 시스템 설정의 월별 중점사항 (점검일 기준)
   const monthFocus = getFocusForMonth(inspectionDate.slice(0, 7));
+
   const [inspector, setInspector] = useState(defaultInspector);
   const [focusCategory, setFocusCategory] = useState(defaultFocus || monthFocus);
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 상위에서 기본 점검자 이름이 변경되면 로컬 상태도 업데이트 (입력된 값이 없을 때만)
   useEffect(() => {
-    if (defaultInspector && !inspector) {
-      setInspector(defaultInspector);
-    }
+    if (defaultInspector && !inspector) setInspector(defaultInspector);
   }, [defaultInspector]);
 
   useEffect(() => {
@@ -44,9 +43,40 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
   }, [defaultFocus, monthFocus]);
 
   const [scores, setScores] = useState<CategoryScores>(initialScores);
-
   const setScore = (key: CategoryKey, value: number) =>
     setScores(prev => ({ ...prev, [key]: value }));
+
+  // 세부항목 점수 (중점사항 카테고리용): "categoryKey_subKey" → 점수
+  const [subScores, setSubScores] = useState<Record<string, number>>({});
+
+  // 중점사항 카테고리가 바뀌면 세부항목 점수 초기화 (max값으로)
+  useEffect(() => {
+    if (!focusCategory) return;
+    const cat = categories.find(c => c.key === focusCategory);
+    if (!cat?.subCriteria?.length) return;
+    setSubScores(prev => {
+      const next = { ...prev };
+      cat.subCriteria.forEach(sub => {
+        const k = `${cat.key}_${sub.key}`;
+        if (!(k in next)) next[k] = sub.max; // 첫 진입 시 만점으로 초기화
+      });
+      return next;
+    });
+  }, [focusCategory, categories]);
+
+  // 세부항목 점수 합계 → 해당 카테고리 점수 자동 반영
+  useEffect(() => {
+    if (!focusCategory) return;
+    const cat = categories.find(c => c.key === focusCategory);
+    if (!cat?.subCriteria?.length) return;
+    const total = cat.subCriteria.reduce((sum, sub) => {
+      return sum + (subScores[`${cat.key}_${sub.key}`] ?? sub.max);
+    }, 0);
+    setScore(focusCategory as CategoryKey, Math.min(total, cat.max));
+  }, [subScores, focusCategory, categories]);
+
+  const setSubScore = (catKey: string, subKey: string, value: number) =>
+    setSubScores(prev => ({ ...prev, [`${catKey}_${subKey}`]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +130,8 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
     }
   };
 
+  const totalScore = scores.greeting + scores.response + scores.phone + scores.appearance + scores.environment;
+
   return (
     <form onSubmit={handleSubmit} className="mt-3 p-4 bg-surface-50 border border-surface-200 rounded-xl space-y-4">
       <div className="text-sm font-bold text-surface-900 border-b border-surface-200 pb-2">친절점검표 입력 ({inspectionDate})</div>
@@ -142,29 +174,94 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       </div>
 
       <div className="space-y-5">
-        {categories.map(cat => (
-          <div key={cat.key} className="flex flex-col space-y-2">
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm font-semibold text-surface-800">
-                {cat.name}
-                {focusCategory === cat.key && (
-                  <span className="ml-2 text-[10px] font-bold text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded">중점</span>
-                )}
-              </span>
-              <span className="text-sm font-bold text-primary-600 font-mono">{scores[cat.key]} / {cat.max}</span>
+        {categories.map(cat => {
+          const isFocus = focusCategory === cat.key;
+
+          return (
+            <div key={cat.key} className={`flex flex-col space-y-2 rounded-xl p-3 -mx-1 ${isFocus ? "bg-primary-50 border border-primary-200" : ""}`}>
+              {/* 카테고리 헤더 */}
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-semibold text-surface-800">
+                  {cat.name}
+                  {isFocus && (
+                    <span className="ml-2 text-[10px] font-bold text-primary-600 bg-primary-100 px-1.5 py-0.5 rounded">중점사항</span>
+                  )}
+                </span>
+                <span className="text-sm font-bold text-primary-600 font-mono">{scores[cat.key]} / {cat.max}</span>
+              </div>
+
+              {isFocus && cat.subCriteria.length > 0 ? (
+                /* 중점사항: 세부 항목 평가 */
+                <div className="space-y-4 pt-1">
+                  {cat.subCriteria.map(sub => {
+                    const subKey = `${cat.key}_${sub.key}`;
+                    const val = subScores[subKey] ?? sub.max;
+                    return (
+                      <div key={sub.key} className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-surface-700">{sub.name}</span>
+                            <span className="ml-1.5 text-[10px] text-surface-400 font-mono">({sub.max}점)</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => setSubScore(cat.key, sub.key, Math.max(0, val - 1))}
+                              className="w-7 h-7 rounded-md border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 font-bold flex items-center justify-center text-base leading-none"
+                            >−</button>
+                            <span className="font-mono font-bold text-sm w-12 text-center tabular-nums">
+                              {val} / {sub.max}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setSubScore(cat.key, sub.key, Math.min(sub.max, val + 1))}
+                              className="w-7 h-7 rounded-md border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 font-bold flex items-center justify-center text-base leading-none"
+                            >+</button>
+                          </div>
+                        </div>
+                        <ul className="text-xs text-surface-500 space-y-0.5 pl-1">
+                          {sub.items.map((item, i) => (
+                            <li key={i} className="flex items-start gap-1">
+                              <span className="text-primary-400 mt-0.5 shrink-0">{i + 1}.</span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                  {/* 합계 바 */}
+                  <div className="pt-1 border-t border-primary-200">
+                    <div className="flex justify-between text-xs text-primary-700 font-semibold mb-1">
+                      <span>소계</span>
+                      <span className="font-mono">{scores[cat.key]} / {cat.max}점</span>
+                    </div>
+                    <div className="h-1.5 bg-primary-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary-500 rounded-full transition-all duration-300"
+                        style={{ width: `${(scores[cat.key] / cat.max) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* 일반 카테고리: 슬라이더 */
+                <>
+                  <p className="text-xs text-surface-400">{cat.details}</p>
+                  <input
+                    type="range"
+                    min={0}
+                    max={cat.max}
+                    step={1}
+                    value={scores[cat.key]}
+                    onChange={(e) => setScore(cat.key as CategoryKey, Number(e.target.value))}
+                    className="w-full accent-primary-600 cursor-pointer"
+                  />
+                </>
+              )}
             </div>
-            <p className="text-xs text-surface-400">{cat.details}</p>
-            <input
-              type="range"
-              min={0}
-              max={cat.max}
-              step={1}
-              value={scores[cat.key]}
-              onChange={(e) => setScore(cat.key, Number(e.target.value))}
-              className="w-full accent-primary-600 cursor-pointer"
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="space-y-2 text-sm">
@@ -180,7 +277,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
 
       <div className="flex items-center justify-between pt-2">
         <span className="text-sm font-bold text-surface-700">
-          총점 <span className="text-primary-600 font-mono">{scores.greeting + scores.response + scores.phone + scores.appearance + scores.environment}</span> / 50
+          총점 <span className="text-primary-600 font-mono">{totalScore}</span> / 50
         </span>
         <div className="flex space-x-2">
           <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-lg border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors" disabled={isSubmitting}>
