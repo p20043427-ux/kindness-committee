@@ -3,6 +3,7 @@ import { supabase } from "@/src/lib/supabase";
 import { liveQuery, rowToRecord, computeStatus, CategoryScores } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import { useSettings } from "@/src/components/layout/SettingsProvider";
 import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown } from "lucide-react";
 
 export interface RecordDoc {
@@ -29,6 +30,7 @@ export interface RecordDoc {
 export function DataManagement() {
   const { user } = useAuth();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
+  const { categories } = useSettings();
   const [allRecords, setAllRecords] = useState<RecordDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -241,17 +243,13 @@ export function DataManagement() {
 
   // Export handlers
   const exportRawCSV = () => {
-    const headers = ["점검일", "소속 건물", "부서명", "점검자", "인사예절", "응대스킬", "전화응대", "용모복장", "병원환경/불만고객", "총점", "상태", "특이사항"];
+    const headers = ["점검일", "소속 건물", "부서명", "점검자", ...categories.map(c => c.name), "총점", "상태", "특이사항"];
     const rows = displayRecords.map(r => [
       r.date.split("T")[0],
       getBuildingName(r.buildingId) || "",
       r.departmentName || "",
       r.inspector || "",
-      r.scores?.greeting ?? 0,
-      r.scores?.response ?? 0,
-      r.scores?.phone ?? 0,
-      r.scores?.appearance ?? 0,
-      r.scores?.environment ?? 0,
+      ...categories.map(c => r.scores?.[c.key as keyof typeof r.scores] ?? 0),
       r.totalScore ?? 0,
       r.status || "",
       `"${(r.notes || "").replace(/"/g, '""')}"`
@@ -462,11 +460,9 @@ export function DataManagement() {
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('buildingName')}>소속 건물{renderRawSortIcon('buildingName')}</th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('departmentName')}>부서명{renderRawSortIcon('departmentName')}</th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('inspector')}>점검자{renderRawSortIcon('inspector')}</th>
-                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('greeting')}>인사예절{renderRawSortIcon('greeting')}</th>
-                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('response')}>응대스킬{renderRawSortIcon('response')}</th>
-                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('phone')}>전화응대{renderRawSortIcon('phone')}</th>
-                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('appearance')}>용모복장{renderRawSortIcon('appearance')}</th>
-                    <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('environment')}>병원환경{renderRawSortIcon('environment')}</th>
+                    {categories.map(c => (
+                      <th key={c.key} className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort(c.key as RawSortKey)}>{c.name}{renderRawSortIcon(c.key as RawSortKey)}</th>
+                    ))}
                     <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('totalScore')}>총점{renderRawSortIcon('totalScore')}</th>
                     <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('status')}>상태{renderRawSortIcon('status')}</th>
                     <th className="py-3 px-4 font-semibold min-w-[200px]">특이사항</th>

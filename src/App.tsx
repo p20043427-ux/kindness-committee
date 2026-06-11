@@ -17,6 +17,7 @@ import { Schedule } from "./pages/Schedule";
 import { Events } from "./pages/Events";
 import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
 import { OrganizationProvider } from "./components/layout/OrganizationProvider";
+import { SettingsProvider } from "./components/layout/SettingsProvider";
 
 function AppRoutes() {
   const { loading } = useAuth();
@@ -27,6 +28,7 @@ function AppRoutes() {
 
   return (
     <OrganizationProvider>
+      <SettingsProvider>
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Dashboard />} />
@@ -40,6 +42,7 @@ function AppRoutes() {
           <Route path="admin" element={<Admin />} />
         </Route>
       </Routes>
+      </SettingsProvider>
     </OrganizationProvider>
   );
 }

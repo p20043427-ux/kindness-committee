@@ -7,6 +7,7 @@ import { useAuth } from "@/src/components/auth/AuthProvider";
 import { InlineInputForm } from "@/src/components/features/InlineInputForm";
 import { DatePickerWithData } from "@/src/components/features/DatePickerWithData";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
+import { useSettings } from "@/src/components/layout/SettingsProvider";
 
 interface RecordData {
   departmentId: string;
@@ -22,6 +23,7 @@ interface RecordData {
 export function Monitoring() {
   const { user } = useAuth();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
+  const { categories, getFocusForMonth, categoryName } = useSettings();
   const [records, setRecords] = useState<RecordData[]>([]);
   const [members, setMembers] = useState<{id: string, name: string}[]>([]);
   
@@ -119,7 +121,7 @@ export function Monitoring() {
       }
 
       // 2. CSV 헤더 구성
-      const headers = ["점검일자", "건물명", "부서명", "점검자", "상태", "총점(50점 만점)", "인사예절", "응대스킬", "전화응대", "용모복장", "병원환경/불만고객", "특이사항"];
+      const headers = ["점검일자", "건물명", "부서명", "점검자", "상태", "총점(50점 만점)", ...categories.map(c => c.name), "특이사항"];
       const csvRows = [headers.join(",")];
 
       filteredDocs.forEach((data) => {
@@ -138,11 +140,7 @@ export function Monitoring() {
           escapeCSV(data.inspector || ""),
           escapeCSV(data.status || ""),
           escapeCSV(data.total_score || 0),
-          escapeCSV(data.greeting || 0),
-          escapeCSV(data.response || 0),
-          escapeCSV(data.phone || 0),
-          escapeCSV(data.appearance || 0),
-          escapeCSV(data.environment || 0),
+          ...categories.map(c => escapeCSV(data[c.key] || 0)),
           escapeCSV(data.notes || "")
         ];
         csvRows.push(row.join(","));
@@ -200,6 +198,17 @@ export function Monitoring() {
         <div>
           <h1 className="text-2xl font-bold text-surface-900 tracking-tight">일자별 점검 현황</h1>
           <p className="text-surface-500 mt-1">이전 기록 조회 및 해당 일자 점검표를 개별 입력합니다.</p>
+          {(() => {
+            const focusKey = getFocusForMonth(selectedDate.slice(0, 7));
+            const month = Number(selectedDate.slice(5, 7));
+            return focusKey ? (
+              <p className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200 text-sm text-teal-700">
+                <span>🎯</span>
+                <span className="font-medium">{month}월 중점사항:</span>
+                <span className="font-bold">{categoryName(focusKey)}</span>
+              </p>
+            ) : null;
+          })()}
         </div>
         <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
            <button
