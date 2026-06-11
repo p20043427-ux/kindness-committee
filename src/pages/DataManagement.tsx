@@ -53,6 +53,15 @@ export function DataManagement() {
   // Filter State (Aggregate)
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
 
+  // Filter State (Building / Department)
+  const [filterBuildingId, setFilterBuildingId] = useState("");
+  const [filterDepartmentId, setFilterDepartmentId] = useState("");
+
+  const handleBuildingFilterChange = (bid: string) => {
+    setFilterBuildingId(bid);
+    setFilterDepartmentId("");
+  };
+
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<RecordDoc>>({});
@@ -142,41 +151,44 @@ export function DataManagement() {
   const displayRecords = useMemo(() => {
     let filtered = allRecords.filter(r => {
       const d = r.date.split("T")[0];
-      if (filterType === "month") {
-        return d.startsWith(filterMonth);
-      } else {
-        return d >= startDate && d <= endDate;
-      }
+      const inRange = filterType === "month" ? d.startsWith(filterMonth) : d >= startDate && d <= endDate;
+      if (!inRange) return false;
+      if (filterBuildingId && r.buildingId !== filterBuildingId) return false;
+      if (filterDepartmentId && r.departmentId !== filterDepartmentId) return false;
+      return true;
     });
 
     if (rawSortConfig !== null) {
       filtered.sort((a, b) => {
         let aValue: any;
         let bValue: any;
-        
         if (rawSortConfig.key === 'buildingName') {
-           aValue = getBuildingName(a.buildingId);
-           bValue = getBuildingName(b.buildingId);
+          aValue = getBuildingName(a.buildingId);
+          bValue = getBuildingName(b.buildingId);
         } else if (['greeting', 'response', 'phone', 'appearance', 'environment'].includes(rawSortConfig.key)) {
-           aValue = a.scores?.[rawSortConfig.key as keyof RecordDoc['scores']] ?? 0;
-           bValue = b.scores?.[rawSortConfig.key as keyof RecordDoc['scores']] ?? 0;
+          aValue = a.scores?.[rawSortConfig.key as keyof RecordDoc['scores']] ?? 0;
+          bValue = b.scores?.[rawSortConfig.key as keyof RecordDoc['scores']] ?? 0;
         } else {
-           aValue = a[rawSortConfig.key as keyof RecordDoc];
-           bValue = b[rawSortConfig.key as keyof RecordDoc];
+          aValue = a[rawSortConfig.key as keyof RecordDoc];
+          bValue = b[rawSortConfig.key as keyof RecordDoc];
         }
-  
-        if (aValue < bValue) {
-          return rawSortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return rawSortConfig.direction === 'asc' ? 1 : -1;
-        }
+        if (aValue < bValue) return rawSortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return rawSortConfig.direction === 'asc' ? 1 : -1;
         return 0;
+      });
+    } else {
+      // 기본 정렬: 건물 순서 → 부서 순서 → 날짜 내림차순
+      filtered.sort((a, b) => {
+        const bOrd = buildings.findIndex(x => x.id === a.buildingId) - buildings.findIndex(x => x.id === b.buildingId);
+        if (bOrd !== 0) return bOrd;
+        const dOrd = departments.findIndex(x => x.id === a.departmentId) - departments.findIndex(x => x.id === b.departmentId);
+        if (dOrd !== 0) return dOrd;
+        return b.date.localeCompare(a.date);
       });
     }
 
     return filtered;
-  }, [allRecords, filterType, filterMonth, startDate, endDate, rawSortConfig, buildings]);
+  }, [allRecords, filterType, filterMonth, startDate, endDate, filterBuildingId, filterDepartmentId, rawSortConfig, buildings, departments]);
 
   // Computed: Aggregate Data
   const aggregateData = useMemo(() => {
@@ -408,49 +420,88 @@ export function DataManagement() {
 
       {activeTab === "raw" ? (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-50 p-4 rounded-xl border border-surface-200">
-            <div className="flex items-center flex-wrap gap-2">
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value as "month" | "range")}
-                className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium"
-              >
-                <option value="month">월간 조회</option>
-                <option value="range">기간 조회</option>
-              </select>
+          <div className="flex flex-col gap-3 bg-surface-50 p-4 rounded-xl border border-surface-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex items-center flex-wrap gap-2">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value as "month" | "range")}
+                  className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium"
+                >
+                  <option value="month">월간 조회</option>
+                  <option value="range">기간 조회</option>
+                </select>
 
-              {filterType === "month" ? (
-                <input
-                  type="month"
-                  value={filterMonth}
-                  onChange={(e) => setFilterMonth(e.target.value)}
-                  className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium"
-                />
-              ) : (
-                <div className="flex items-center gap-2">
+                {filterType === "month" ? (
                   <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900"
+                    type="month"
+                    value={filterMonth}
+                    onChange={(e) => setFilterMonth(e.target.value)}
+                    className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium"
                   />
-                  <span className="text-surface-500">~</span>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900"
-                  />
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900"
+                    />
+                    <span className="text-surface-500">~</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900"
+                    />
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={exportRawCSV}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                CSV 내보내기
+              </button>
             </div>
-            <button
-              onClick={exportRawCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              CSV 내보내기
-            </button>
+
+            {/* 건물/부서 필터 */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-surface-200">
+              <span className="text-xs font-semibold text-surface-500 mr-1">필터</span>
+              <select
+                value={filterBuildingId}
+                onChange={(e) => handleBuildingFilterChange(e.target.value)}
+                className="bg-white border border-surface-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700"
+              >
+                <option value="">전체 건물</option>
+                {buildings.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+              <select
+                value={filterDepartmentId}
+                onChange={(e) => setFilterDepartmentId(e.target.value)}
+                className="bg-white border border-surface-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700"
+              >
+                <option value="">전체 부서</option>
+                {(filterBuildingId
+                  ? departments.filter(d => d.buildingId === filterBuildingId)
+                  : departments
+                ).map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+              {(filterBuildingId || filterDepartmentId) && (
+                <button
+                  onClick={() => { setFilterBuildingId(""); setFilterDepartmentId(""); }}
+                  className="text-xs text-surface-400 hover:text-surface-700 underline"
+                >
+                  필터 초기화
+                </button>
+              )}
+              <span className="ml-auto text-xs text-surface-400 font-mono">{displayRecords.length}건</span>
+            </div>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
