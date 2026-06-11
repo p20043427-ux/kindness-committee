@@ -100,17 +100,23 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       const deptName = departments.find(d => d.id === departmentId)?.name || "";
       const scores: CategoryScores = { ...zeroScores, [focusCategory]: focusScore };
       const status = focusStatus(focusScore, notes);
-
-      const recordId = "REC-" + Date.now().toString(36).toUpperCase();
+      const inspectionDateIso = inspectionDate + "T09:00:00Z";
       const nowIso = new Date().toISOString();
 
-      const { error } = await supabase.from("kc_records").insert({
-        id: recordId,
+      // 같은 부서+점검일 레코드가 있으면 UPDATE, 없으면 INSERT
+      const { data: existing } = await supabase
+        .from("kc_records")
+        .select("id")
+        .eq("department_id", departmentId)
+        .eq("date", inspectionDateIso)
+        .maybeSingle();
+
+      const payload = {
         building_id: buildingId,
         department_id: departmentId,
         department_name: deptName,
         inspector,
-        date: inspectionDate + "T09:00:00Z",
+        date: inspectionDateIso,
         greeting: scores.greeting,
         response: scores.response,
         phone: scores.phone,
@@ -121,10 +127,20 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
         total_score: focusScore,
         notes: notes.trim(),
         status,
-        created_at: nowIso,
         updated_at: nowIso,
         user_id: user?.uid || "anonymous",
-      });
+      };
+
+      let error;
+      if (existing) {
+        ({ error } = await supabase.from("kc_records").update(payload).eq("id", existing.id));
+      } else {
+        ({ error } = await supabase.from("kc_records").insert({
+          ...payload,
+          id: "REC-" + Date.now().toString(36).toUpperCase(),
+          created_at: nowIso,
+        }));
+      }
       if (error) throw error;
 
       alert(`${inspector}님의 친절점검 결과가 동기화되었습니다. ✅`);
