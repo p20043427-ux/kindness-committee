@@ -12,6 +12,9 @@ interface InlineInputFormProps {
   inspectionDate: string;
   defaultInspector?: string;
   defaultFocus?: string;
+  defaultSubScores?: Record<string, number>;
+  defaultNotes?: string;
+  isEditing?: boolean;
   members?: {id: string, name: string}[];
   onSuccess: () => void;
   onCancel: () => void;
@@ -26,7 +29,7 @@ function focusStatus(score: number, notes: string): '정상' | '주의' | '긴�
   return '정상';
 }
 
-export function InlineInputForm({ buildingId, departmentId, inspectionDate, defaultInspector = "", defaultFocus = "", members = [], onSuccess, onCancel }: InlineInputFormProps) {
+export function InlineInputForm({ buildingId, departmentId, inspectionDate, defaultInspector = "", defaultFocus = "", defaultSubScores, defaultNotes = "", isEditing = false, members = [], onSuccess, onCancel }: InlineInputFormProps) {
   const { user } = useAuth();
   const { departments } = useOrganization();
   const { categories, getFocusForMonth } = useSettings();
@@ -35,7 +38,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
 
   const [inspector, setInspector] = useState(defaultInspector);
   const [focusCategory, setFocusCategory] = useState(defaultFocus || monthFocus);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(defaultNotes);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -48,10 +51,10 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
     if (auto && !focusCategory) setFocusCategory(auto);
   }, [defaultFocus, monthFocus]);
 
-  // 세부항목 점수: "categoryKey_subKey" → 점수
-  const [subScores, setSubScores] = useState<Record<string, number>>({});
+  // 세부항목 점수: "categoryKey_subKey" → 점수 (기존 데이터 있으면 그걸로 초기화)
+  const [subScores, setSubScores] = useState<Record<string, number>>(defaultSubScores ?? {});
 
-  // 중점사항 카테고리가 바뀌면 세부항목 점수 만점으로 초기화
+  // 중점사항 카테고리가 바뀌면 없는 항목만 만점으로 채움
   useEffect(() => {
     if (!focusCategory) return;
     const cat = categories.find(c => c.key === focusCategory);

@@ -18,6 +18,8 @@ interface RecordData {
   notes?: string;
   departmentName?: string;
   createdAt?: string;
+  focusCategory?: string;
+  subScores?: Record<string, number>;
 }
 
 export function Monitoring() {
@@ -79,6 +81,8 @@ export function Monitoring() {
           notes: data.notes,
           departmentName: data.department_name,
           createdAt: data.created_at || "",
+          focusCategory: data.focus_category || "",
+          subScores: data.sub_scores ?? undefined,
         }));
         dailyRecords.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
         setRecords(dailyRecords);
@@ -279,10 +283,8 @@ export function Monitoring() {
                       return (
                         <div key={dept.id} className="flex flex-col">
                           <div
-                            onClick={() => {
-                              if (status === "미점검") setExpandedDeptId(isExpanded ? null : dept.id);
-                            }}
-                            className={`p-3 rounded-lg border transition-all ${getStatusColor(status)} flex items-center justify-between bg-white bg-opacity-70 backdrop-blur-sm ${status === "미점검" ? "cursor-pointer hover:shadow-sm hover:border-primary-300" : "cursor-default"}`}
+                            onClick={() => setExpandedDeptId(isExpanded ? null : dept.id)}
+                            className={`p-3 rounded-lg border transition-all ${getStatusColor(status)} flex items-center justify-between bg-white bg-opacity-70 backdrop-blur-sm cursor-pointer hover:shadow-sm`}
                           >
                             <div className="flex flex-col">
                               <span className="font-semibold text-sm break-keep">{dept.name}</span>
@@ -303,11 +305,15 @@ export function Monitoring() {
                           {/* Inline Form Dropdown */}
                           {isExpanded && (
                             <div className="animate-in slide-in-from-top-2 fade-in duration-200">
-                              <InlineInputForm 
+                              <InlineInputForm
                                 buildingId={building.id}
                                 departmentId={dept.id}
                                 inspectionDate={selectedDate}
-                                defaultInspector={globalInspector}
+                                defaultInspector={record?.inspector || globalInspector}
+                                defaultFocus={record?.focusCategory || ""}
+                                defaultSubScores={record?.subScores}
+                                defaultNotes={record?.notes || ""}
+                                isEditing={!!record}
                                 members={members}
                                 onSuccess={handleSuccess}
                                 onCancel={() => setExpandedDeptId(null)}
