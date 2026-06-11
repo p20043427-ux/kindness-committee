@@ -117,6 +117,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
         appearance: scores.appearance,
         environment: scores.environment,
         focus_category: focusCategory,
+        sub_scores: subScores,
         total_score: focusScore,
         notes: notes.trim(),
         status,

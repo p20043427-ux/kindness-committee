@@ -20,6 +20,8 @@ export interface RecordDoc {
     appearance: number;
     environment: number;
   };
+  focusCategory?: string;
+  subScores?: Record<string, number>;
   totalScore: number;
   notes: string;
   status: string;
@@ -30,7 +32,7 @@ export interface RecordDoc {
 export function DataManagement() {
   const { user } = useAuth();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
-  const { categories } = useSettings();
+  const { categories, categoryName } = useSettings();
   const [allRecords, setAllRecords] = useState<RecordDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -50,6 +52,9 @@ export function DataManagement() {
 
   // Filter State (Aggregate)
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
+
+  // Sub-criteria expand state
+  const [expandedSubId, setExpandedSubId] = useState<string | null>(null);
 
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -460,6 +465,7 @@ export function DataManagement() {
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('buildingName')}>소속 건물{renderRawSortIcon('buildingName')}</th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('departmentName')}>부서명{renderRawSortIcon('departmentName')}</th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('inspector')}>점검자{renderRawSortIcon('inspector')}</th>
+                    <th className="py-3 px-4 font-semibold text-center whitespace-nowrap bg-teal-50 text-teal-700">중점사항</th>
                     {categories.map(c => (
                       <th key={c.key} className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort(c.key as RawSortKey)}>{c.name}{renderRawSortIcon(c.key as RawSortKey)}</th>
                     ))}
@@ -472,110 +478,161 @@ export function DataManagement() {
                 <tbody className="divide-y divide-surface-100">
                   {displayRecords.length === 0 ? (
                     <tr>
-                      <td colSpan={13} className="py-8 text-center text-surface-500">
+                      <td colSpan={14} className="py-8 text-center text-surface-500">
                         선택된 기간에 입력된 점검 데이터가 없습니다.
                       </td>
                     </tr>
                   ) : (
                     displayRecords.map(record => {
                       const isEditing = editingId === record.id;
+                      const isExpanded = expandedSubId === record.id;
+                      const focusCat = record.focusCategory
+                        ? categories.find(c => c.key === record.focusCategory)
+                        : null;
+                      const hasSubScores = record.subScores && Object.keys(record.subScores).length > 0;
+                      const colSpan = 4 + 1 + categories.length + 4; // date+building+dept+inspector + focus + cats + total+status+notes+actions
                       return (
-                        <tr key={record.id} className="hover:bg-surface-50 group">
-                          <td className="py-2 px-4 text-surface-600">{record.date.split("T")[0]}</td>
-                          <td className="py-2 px-4 text-surface-900">{getBuildingName(record.buildingId)}</td>
-                          <td className="py-2 px-4 text-surface-900 font-medium">{record.departmentName}</td>
-                          <td className="py-2 px-4">
-                            {isEditing ? (
-                              <input 
-                                type="text" 
-                                className="w-20 px-2 py-1 text-sm border border-surface-300 rounded" 
-                                value={editForm.inspector || ""} 
-                                onChange={(e) => setEditForm({ ...editForm, inspector: e.target.value })}
-                              />
-                            ) : record.inspector}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.greeting} onChange={(e) => handleScoreChange('greeting', e.target.value)} />
-                            ) : record.scores?.greeting || 0}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.response} onChange={(e) => handleScoreChange('response', e.target.value)} />
-                            ) : record.scores?.response || 0}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.phone} onChange={(e) => handleScoreChange('phone', e.target.value)} />
-                            ) : record.scores?.phone || 0}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.appearance} onChange={(e) => handleScoreChange('appearance', e.target.value)} />
-                            ) : record.scores?.appearance || 0}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.environment} onChange={(e) => handleScoreChange('environment', e.target.value)} />
-                            ) : record.scores?.environment || 0}
-                          </td>
-                          <td className="py-2 px-4 text-center font-bold text-surface-900">
-                            {isEditing ? editForm.totalScore : record.totalScore}
-                          </td>
-                          <td className="py-2 px-4 text-center">
-                            {isEditing ? (
-                              <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
-                                editForm.status === '정상' ? 'bg-green-100 text-green-700' :
-                                editForm.status === '주의' ? 'bg-orange-100 text-orange-700' :
-                                'bg-red-100 text-red-700'
-                              }`}>
-                                {editForm.status}
-                              </span>
-                            ) : (
-                              <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
-                                record.status === '정상' ? 'bg-green-100 text-green-700' :
-                                record.status === '주의' ? 'bg-orange-100 text-orange-700' :
-                                'bg-red-100 text-red-700'
-                              }`}>
-                                {record.status}
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2 px-4">
-                            {isEditing ? (
-                              <input 
-                                type="text" 
-                                className="w-full min-w-[200px] px-2 py-1 text-sm border border-surface-300 rounded" 
-                                value={editForm.notes || ""} 
-                                onChange={(e) => handleNotesChange(e.target.value)}
-                              />
-                            ) : (
-                              <span className="truncate max-w-[200px] block" title={record.notes}>
-                                {record.notes}
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2 px-4 text-right">
-                            {isEditing ? (
-                              <div className="flex justify-end gap-2">
-                                <button onClick={() => saveEdit(record.id)} className="px-2 py-1 bg-primary-600 text-white rounded text-xs hover:bg-primary-700">저장</button>
-                                <button onClick={cancelEdit} className="px-2 py-1 bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300">취소</button>
-                              </div>
-                            ) : (
-                              <div className="flex justify-end gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <React.Fragment key={record.id}>
+                          <tr className="hover:bg-surface-50 group">
+                            <td className="py-2 px-4 text-surface-600">{record.date.split("T")[0]}</td>
+                            <td className="py-2 px-4 text-surface-900">{getBuildingName(record.buildingId)}</td>
+                            <td className="py-2 px-4 text-surface-900 font-medium">{record.departmentName}</td>
+                            <td className="py-2 px-4">
+                              {isEditing ? (
+                                <input
+                                  type="text"
+                                  className="w-20 px-2 py-1 text-sm border border-surface-300 rounded"
+                                  value={editForm.inspector || ""}
+                                  onChange={(e) => setEditForm({ ...editForm, inspector: e.target.value })}
+                                />
+                              ) : record.inspector}
+                            </td>
+                            {/* 중점사항 */}
+                            <td className="py-2 px-4 text-center bg-teal-50/40">
+                              {focusCat ? (
+                                <button
+                                  onClick={() => setExpandedSubId(isExpanded ? null : record.id)}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700 hover:bg-teal-200 transition-colors"
+                                >
+                                  {focusCat.name}
+                                  {hasSubScores && <span className="text-[10px]">{isExpanded ? "▲" : "▼"}</span>}
+                                </button>
+                              ) : (
+                                <span className="text-surface-300 text-xs">—</span>
+                              )}
+                            </td>
+                            <td className="py-2 px-4 text-center">
+                              {isEditing ? (
+                                <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                  value={editForm.scores?.greeting} onChange={(e) => handleScoreChange('greeting', e.target.value)} />
+                              ) : record.scores?.greeting || 0}
+                            </td>
+                            <td className="py-2 px-4 text-center">
+                              {isEditing ? (
+                                <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                  value={editForm.scores?.response} onChange={(e) => handleScoreChange('response', e.target.value)} />
+                              ) : record.scores?.response || 0}
+                            </td>
+                            <td className="py-2 px-4 text-center">
+                              {isEditing ? (
+                                <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                  value={editForm.scores?.phone} onChange={(e) => handleScoreChange('phone', e.target.value)} />
+                              ) : record.scores?.phone || 0}
+                            </td>
+                            <td className="py-2 px-4 text-center">
+                              {isEditing ? (
+                                <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                  value={editForm.scores?.appearance} onChange={(e) => handleScoreChange('appearance', e.target.value)} />
+                              ) : record.scores?.appearance || 0}
+                            </td>
+                            <td className="py-2 px-4 text-center">
+                              {isEditing ? (
+                                <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                  value={editForm.scores?.environment} onChange={(e) => handleScoreChange('environment', e.target.value)} />
+                              ) : record.scores?.environment || 0}
+                            </td>
+                            <td className="py-2 px-4 text-center font-bold text-surface-900">
+                              {isEditing ? editForm.totalScore : record.totalScore}
+                            </td>
+                            <td className="py-2 px-4 text-center">
+                              {isEditing ? (
+                                <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
+                                  editForm.status === '정상' ? 'bg-green-100 text-green-700' :
+                                  editForm.status === '주의' ? 'bg-orange-100 text-orange-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>
+                                  {editForm.status}
+                                </span>
+                              ) : (
+                                <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
+                                  record.status === '정상' ? 'bg-green-100 text-green-700' :
+                                  record.status === '주의' ? 'bg-orange-100 text-orange-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>
+                                  {record.status}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2 px-4">
+                              {isEditing ? (
+                                <input
+                                  type="text"
+                                  className="w-full min-w-[200px] px-2 py-1 text-sm border border-surface-300 rounded"
+                                  value={editForm.notes || ""}
+                                  onChange={(e) => handleNotesChange(e.target.value)}
+                                />
+                              ) : (
+                                <span className="truncate max-w-[200px] block" title={record.notes}>
+                                  {record.notes}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2 px-4 text-right">
+                              {isEditing ? (
                                 <div className="flex justify-end gap-2">
-                                  <button onClick={() => startEdit(record)} className="px-2 py-1 text-primary-600 bg-primary-50 rounded text-xs hover:bg-primary-100">수정</button>
-                                  <button onClick={() => deleteRecord(record.id)} className="px-2 py-1 text-red-600 bg-red-50 rounded text-xs hover:bg-red-100">삭제</button>
+                                  <button onClick={() => saveEdit(record.id)} className="px-2 py-1 bg-primary-600 text-white rounded text-xs hover:bg-primary-700">저장</button>
+                                  <button onClick={cancelEdit} className="px-2 py-1 bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300">취소</button>
                                 </div>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
+                              ) : (
+                                <div className="flex justify-end gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="flex justify-end gap-2">
+                                    <button onClick={() => startEdit(record)} className="px-2 py-1 text-primary-600 bg-primary-50 rounded text-xs hover:bg-primary-100">수정</button>
+                                    <button onClick={() => deleteRecord(record.id)} className="px-2 py-1 text-red-600 bg-red-50 rounded text-xs hover:bg-red-100">삭제</button>
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                          {/* 세부항목 펼치기 */}
+                          {isExpanded && hasSubScores && focusCat && (
+                            <tr className="bg-teal-50/60 border-t border-teal-100">
+                              <td colSpan={colSpan} className="px-6 py-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-xs font-bold text-teal-700">세부 평가항목 — {focusCat.name}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-4">
+                                  {focusCat.subCriteria.map(sub => {
+                                    const val = record.subScores![`${focusCat.key}_${sub.key}`];
+                                    return (
+                                      <div key={sub.key} className="flex flex-col items-center gap-1 min-w-[80px]">
+                                        <span className="text-[11px] text-teal-600 font-medium">{sub.name}</span>
+                                        <span className="text-sm font-bold text-teal-800 font-mono">
+                                          {val ?? "—"} / {sub.max}
+                                        </span>
+                                        <div className="w-full h-1 bg-teal-100 rounded-full overflow-hidden">
+                                          <div
+                                            className="h-full bg-teal-400 rounded-full"
+                                            style={{ width: val != null ? `${(val / sub.max) * 100}%` : "0%" }}
+                                          />
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       );
                     })
                   )}

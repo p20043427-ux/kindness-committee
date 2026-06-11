@@ -58,6 +58,7 @@ export interface RecordRow {
   appearance: number;
   environment: number;
   focus_category: string;
+  sub_scores?: Record<string, number>;
   total_score: number;
   notes: string;
   status: string;
@@ -81,6 +82,7 @@ export interface AppRecord {
     environment: number;
   };
   focusCategory: string;
+  subScores?: Record<string, number>;
   totalScore: number;
   notes: string;
   status: string;
@@ -104,6 +106,7 @@ export function rowToRecord(r: RecordRow): AppRecord {
       environment: r.environment || 0,
     },
     focusCategory: r.focus_category || '',
+    subScores: r.sub_scores ?? undefined,
     totalScore: r.total_score || 0,
     notes: r.notes || '',
     status: r.status || '정상',
