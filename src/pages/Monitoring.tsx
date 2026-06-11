@@ -289,7 +289,7 @@ export function Monitoring() {
                             <div className="flex flex-col">
                               <span className="font-semibold text-sm break-keep">{dept.name}</span>
                               {score !== null ? (
-                                <span className="text-xs mt-0.5 opacity-80 font-mono font-medium break-keep">총점: {score}점 / 50점</span>
+                                <span className="text-xs mt-0.5 opacity-80 font-mono font-medium break-keep">총점: {score}점 / {score > 10 ? 50 : 10}점</span>
                               ) : (
                                 <span className="text-xs mt-0.5 text-primary-500 font-medium break-keep">클릭하여 점검 입력</span>
                               )}
