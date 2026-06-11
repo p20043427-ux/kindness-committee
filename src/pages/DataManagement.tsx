@@ -502,34 +502,38 @@ export function DataManagement() {
                             ) : record.inspector}
                           </td>
                           {/* 중점사항 + 세부항목 */}
-                          <td className="py-3 px-4 bg-teal-50/40 min-w-[160px]">
+                          <td className="py-3 px-4 bg-teal-50/40 min-w-[180px]">
                             {focusCat ? (
-                              <div className="space-y-1.5">
+                              <div className={`rounded-lg px-2.5 py-2 space-y-1.5 ${hasSubScores ? "bg-teal-50 border border-teal-100" : "bg-amber-50 border border-amber-200"}`}>
                                 <div className="flex items-center gap-1.5">
-                                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700 whitespace-nowrap">
+                                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-100 text-teal-700 whitespace-nowrap">
                                     {focusCat.name}
                                   </span>
-                                  <span className="text-xs font-bold text-teal-800 font-mono whitespace-nowrap">
+                                  <span className={`text-xs font-bold font-mono whitespace-nowrap ${hasSubScores ? "text-teal-800" : "text-amber-700"}`}>
                                     {record.totalScore}/{focusCat.max}점
                                   </span>
                                 </div>
-                                {hasSubScores && focusCat.subCriteria.map(sub => {
-                                  const val = record.subScores![`${focusCat.key}_${sub.key}`];
-                                  return (
-                                    <div key={sub.key} className="flex items-center gap-1.5">
-                                      <span className="text-[11px] text-teal-600 w-16 shrink-0 truncate">{sub.name}</span>
-                                      <div className="flex-1 h-1.5 bg-teal-100 rounded-full overflow-hidden min-w-[32px]">
-                                        <div
-                                          className="h-full bg-teal-400 rounded-full"
-                                          style={{ width: val != null ? `${(val / sub.max) * 100}%` : "0%" }}
-                                        />
+                                {hasSubScores ? (
+                                  focusCat.subCriteria.map(sub => {
+                                    const val = record.subScores![`${focusCat.key}_${sub.key}`];
+                                    return (
+                                      <div key={sub.key} className="flex items-center gap-1.5">
+                                        <span className="text-[11px] text-teal-600 w-14 shrink-0 truncate">{sub.name}</span>
+                                        <div className="flex-1 h-1.5 bg-teal-100 rounded-full overflow-hidden min-w-[28px]">
+                                          <div
+                                            className="h-full bg-teal-400 rounded-full"
+                                            style={{ width: val != null ? `${(val / sub.max) * 100}%` : "0%" }}
+                                          />
+                                        </div>
+                                        <span className="text-[11px] font-mono text-teal-700 font-semibold whitespace-nowrap">
+                                          {val ?? "—"}/{sub.max}
+                                        </span>
                                       </div>
-                                      <span className="text-[11px] font-mono text-teal-700 font-semibold whitespace-nowrap">
-                                        {val ?? "—"}/{sub.max}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
+                                    );
+                                  })
+                                ) : (
+                                  <p className="text-[11px] text-amber-600">세부항목 없음 — 재입력 필요</p>
+                                )}
                               </div>
                             ) : (
                               <span className="text-surface-300 text-xs">—</span>
