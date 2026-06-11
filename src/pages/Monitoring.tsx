@@ -278,13 +278,11 @@ export function Monitoring() {
 
                       return (
                         <div key={dept.id} className="flex flex-col">
-                          <div 
+                          <div
                             onClick={() => {
-                              // 미점검 상태일 때만 클릭해서 폼을 열 수 있도록 설정
-                              // || status === "정상" 등으로 클릭 가능 조건을 바꿀 수 있음
-                              setExpandedDeptId(isExpanded ? null : dept.id);
+                              if (status === "미점검") setExpandedDeptId(isExpanded ? null : dept.id);
                             }}
-                            className={`p-3 rounded-lg border transition-all ${getStatusColor(status)} flex items-center justify-between bg-white bg-opacity-70 backdrop-blur-sm ${status === "미점검" ? "cursor-pointer hover:shadow-sm hover:border-primary-300" : ""}`}
+                            className={`p-3 rounded-lg border transition-all ${getStatusColor(status)} flex items-center justify-between bg-white bg-opacity-70 backdrop-blur-sm ${status === "미점검" ? "cursor-pointer hover:shadow-sm hover:border-primary-300" : "cursor-default"}`}
                           >
                             <div className="flex flex-col">
                               <span className="font-semibold text-sm break-keep">{dept.name}</span>

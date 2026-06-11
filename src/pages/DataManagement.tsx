@@ -612,9 +612,9 @@ export function DataManagement() {
                                 <button onClick={cancelEdit} className="px-2 py-1 bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300">취소</button>
                               </div>
                             ) : (
-                              <div className="flex justify-end gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => startEdit(record)} className="px-2 py-1 text-primary-600 bg-primary-50 rounded text-xs hover:bg-primary-100">수정</button>
-                                <button onClick={() => deleteRecord(record.id)} className="px-2 py-1 text-red-600 bg-red-50 rounded text-xs hover:bg-red-100">삭제</button>
+                              <div className="flex justify-end gap-2 items-center">
+                                <button onClick={() => startEdit(record)} className="px-2 py-1 text-primary-600 bg-primary-50 border border-primary-200 rounded text-xs hover:bg-primary-100">수정</button>
+                                <button onClick={() => deleteRecord(record.id)} className="px-2 py-1 text-red-600 bg-red-50 border border-red-200 rounded text-xs hover:bg-red-100">삭제</button>
                               </div>
                             )}
                           </td>
