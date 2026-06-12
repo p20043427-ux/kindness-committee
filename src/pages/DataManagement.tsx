@@ -519,7 +519,7 @@ export function DataManagement() {
                     ))}
                     <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('totalScore')}>총점{renderRawSortIcon('totalScore')}</th>
                     <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('status')}>상태{renderRawSortIcon('status')}</th>
-                    <th className="py-3 px-4 font-semibold min-w-[200px]">특이사항</th>
+                    <th className="py-3 px-4 font-semibold min-w-[220px] max-w-[320px]">특이사항</th>
                     <th className="py-3 px-4 font-semibold text-right">관리</th>
                   </tr>
                 </thead>
@@ -642,16 +642,16 @@ export function DataManagement() {
                               </span>
                             )}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 whitespace-normal min-w-[220px] max-w-[320px]">
                             {isEditing ? (
                               <input
                                 type="text"
-                                className="w-full min-w-[200px] px-2 py-1 text-sm border border-surface-300 rounded"
+                                className="w-full px-2 py-1 text-sm border border-surface-300 rounded"
                                 value={editForm.notes || ""}
                                 onChange={(e) => handleNotesChange(e.target.value)}
                               />
                             ) : (
-                              <span className="truncate max-w-[200px] block" title={record.notes}>
+                              <span className="break-words text-sm text-surface-700">
                                 {record.notes}
                               </span>
                             )}
