@@ -1,4 +1,4 @@
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 
 interface TopbarProps {
   onToggleMenu?: () => void;
@@ -22,6 +22,15 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
       </div>
       
       <div className="flex items-center space-x-3">
+        <button
+          onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }))}
+          className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm bg-white border border-surface-200 rounded-lg shadow-sm text-surface-500 hover:text-surface-700 hover:bg-surface-50 transition-colors"
+          aria-label="전체 검색 (Ctrl+K)"
+        >
+          <Search className="w-4 h-4" />
+          <span className="text-xs">검색</span>
+          <kbd className="ml-1 px-1.5 py-0.5 text-xs rounded border border-surface-200 bg-surface-50 text-surface-400 font-mono">⌃K</kbd>
+        </button>
         <div className="hidden sm:flex items-center space-x-2 text-sm bg-white border border-surface-200 py-2 px-3 rounded-lg shadow-sm">
           <span className="flex h-2 w-2 relative">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>

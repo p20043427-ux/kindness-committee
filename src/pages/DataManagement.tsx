@@ -1,11 +1,14 @@
-﻿import React, { useState, useEffect, useMemo } from "react";
+﻿import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router";
 import { useToast } from "@/src/components/ui/Toast";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery, rowToRecord, computeStatus, CategoryScores } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
-import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown, ChevronRight } from "lucide-react";
+import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown, ChevronRight, FileSpreadsheet } from "lucide-react";
+import { SkeletonTableRows } from "@/src/components/ui/Skeleton";
+import { downloadExcel } from "@/src/lib/excel";
 
 export interface RecordDoc {
   id: string;
@@ -35,6 +38,7 @@ export function DataManagement() {
   const { toast } = useToast();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
   const { categories, categoryName } = useSettings();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [allRecords, setAllRecords] = useState<RecordDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -56,9 +60,9 @@ export function DataManagement() {
   // Filter State (Aggregate)
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
 
-  // Filter State (Building / Department)
-  const [filterBuildingId, setFilterBuildingId] = useState("");
-  const [filterDepartmentId, setFilterDepartmentId] = useState("");
+  // Filter State (Building / Department) — reads from URL params on first load
+  const [filterBuildingId, setFilterBuildingId] = useState(() => searchParams.get("building") || "");
+  const [filterDepartmentId, setFilterDepartmentId] = useState(() => searchParams.get("dept") || "");
 
   const handleBuildingFilterChange = (bid: string) => {
     setFilterBuildingId(bid);
@@ -72,6 +76,8 @@ export function DataManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<RecordDoc>>({});
   const [isExporting, setIsExporting] = useState(false);
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const undoTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   // Sort State (Raw)
   type RawSortKey = 'date' | 'buildingName' | 'departmentName' | 'inspector' | 'greeting' | 'response' | 'phone' | 'appearance' | 'environment' | 'totalScore' | 'status';
@@ -156,6 +162,7 @@ export function DataManagement() {
   // Computed: Display Records (Raw)
   const displayRecords = useMemo(() => {
     let filtered = allRecords.filter(r => {
+      if (hiddenIds.has(r.id)) return false;
       const d = r.date.split("T")[0];
       const inRange = filterType === "month" ? d.startsWith(filterMonth) : d >= startDate && d <= endDate;
       if (!inRange) return false;
@@ -194,7 +201,7 @@ export function DataManagement() {
     }
 
     return filtered;
-  }, [allRecords, filterType, filterMonth, startDate, endDate, filterBuildingId, filterDepartmentId, rawSortConfig, buildings, departments]);
+  }, [allRecords, filterType, filterMonth, startDate, endDate, filterBuildingId, filterDepartmentId, rawSortConfig, buildings, departments, hiddenIds]);
 
   // Computed: Aggregate Data
   const aggregateData = useMemo(() => {
@@ -282,6 +289,33 @@ export function DataManagement() {
     link.href = url;
     link.download = `점검데이터_${filterType === 'month' ? filterMonth : `${startDate}_${endDate}`}.csv`;
     link.click();
+  };
+
+  const exportRawXLSX = () => {
+    const headers = ["점검일", "소속 건물", "부서명", "점검자", ...categories.map(c => c.name), "총점", "상태", "특이사항"];
+    const rows = displayRecords.map(r => [
+      r.date.split("T")[0],
+      getBuildingName(r.buildingId),
+      r.departmentName,
+      r.inspector,
+      ...categories.map(c => r.scores?.[c.key as keyof typeof r.scores] ?? 0),
+      r.totalScore,
+      r.status,
+      r.notes || "",
+    ]);
+    const label = filterType === "month" ? filterMonth : `${startDate}_${endDate}`;
+    downloadExcel([{ headers, rows, sheetName: "점검내역" }], `점검데이터_${label}.xlsx`);
+  };
+
+  const exportAggregateXLSX = () => {
+    const headers = ["부서명", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월", "연간 평균"];
+    const rows = aggregateData.map(row => [
+      row.departmentName,
+      row.m1, row.m2, row.m3, row.m4, row.m5, row.m6,
+      row.m7, row.m8, row.m9, row.m10, row.m11, row.m12,
+      row.yearlyAvg,
+    ]);
+    downloadExcel([{ headers, rows, sheetName: `${filterYear}년 집계` }], `부서별_월별_점수표_${filterYear}년.xlsx`);
   };
 
   const exportAggregateCSV = () => {
@@ -376,19 +410,67 @@ export function DataManagement() {
     try {
       const { error } = await supabase.from("kc_records").delete().eq("id", id);
       if (error) throw error;
-      setPendingDeleteId(null);
-      toast("점검 기록이 삭제되었습니다.", "success");
     } catch (error) {
       console.error("삭제 오류:", error);
+      setHiddenIds(prev => { const next = new Set(prev); next.delete(id); return next; });
       toast("삭제 중 오류가 발생했습니다.", "error");
     }
   };
 
+  const softDeleteRecord = (id: string) => {
+    setPendingDeleteId(null);
+    setHiddenIds(prev => new Set([...prev, id]));
+    const timer = setTimeout(() => {
+      undoTimers.current.delete(id);
+      setHiddenIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+      deleteRecord(id);
+    }, 5000);
+    undoTimers.current.set(id, timer);
+    toast("점검 기록이 삭제되었습니다.", "success", {
+      label: "실행취소",
+      onClick: () => {
+        const t = undoTimers.current.get(id);
+        if (t) { clearTimeout(t); undoTimers.current.delete(id); }
+        setHiddenIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+      },
+    });
+  };
+
   if (isLoading || orgLoading) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-surface-500">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mb-3"></div>
-        <p>데이터 관리를 위해 정보를 불러오는 중입니다...</p>
+      <div className="space-y-6 animate-in fade-in duration-300">
+        <div>
+          <div className="h-8 w-56 bg-surface-200 rounded motion-safe:animate-pulse mb-2" />
+          <div className="h-4 w-80 bg-surface-100 rounded motion-safe:animate-pulse" />
+        </div>
+        <div className="flex gap-4 border-b border-surface-200 pb-0">
+          <div className="h-10 w-28 bg-surface-100 rounded-t motion-safe:animate-pulse" />
+          <div className="h-10 w-36 bg-surface-100 rounded-t motion-safe:animate-pulse" />
+        </div>
+        <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 space-y-3">
+          <div className="flex gap-2">
+            <div className="h-9 w-28 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+            <div className="h-9 w-36 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+          </div>
+          <div className="flex gap-2 pt-1 border-t border-surface-200">
+            <div className="h-8 w-28 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+            <div className="h-8 w-28 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-surface-50 border-b border-surface-200">
+              <tr>
+                {["점검일","건물","부서","점검자","중점사항","총점","상태","특이사항","관리"].map(h => (
+                  <th key={h} className="py-3 px-4 font-semibold text-surface-500 whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <SkeletonTableRows rows={8} cols={9} />
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }
@@ -463,13 +545,22 @@ export function DataManagement() {
                   </div>
                 )}
               </div>
-              <button
-                onClick={exportRawCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                CSV 내보내기
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={exportRawCSV}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  CSV
+                </button>
+                <button
+                  onClick={exportRawXLSX}
+                  className="flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Excel
+                </button>
+              </div>
             </div>
 
             {/* 건물/부서 필터 */}
@@ -510,7 +601,113 @@ export function DataManagement() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+          {/* Mobile Card View (< sm = 640px) */}
+          <div className="sm:hidden space-y-3">
+            {displayRecords.length === 0 ? (
+              <p className="py-8 text-center text-surface-500">선택된 기간에 입력된 점검 데이터가 없습니다.</p>
+            ) : displayRecords.map(record => {
+              const isEditing = editingId === record.id;
+              const focusCat = record.focusCategory ? categories.find(c => c.key === record.focusCategory) : null;
+              return (
+                <div key={`m-${record.id}`} className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-surface-50 border-b border-surface-100">
+                    <div className="flex items-center gap-2 text-xs text-surface-500">
+                      <span className="font-mono">{record.date.split("T")[0]}</span>
+                      <span>·</span>
+                      <span>{getBuildingName(record.buildingId)}</span>
+                    </div>
+                    <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                      record.status === '정상' ? 'bg-green-100 text-green-700' :
+                      record.status === '주의' ? 'bg-orange-100 text-orange-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>{record.status}</span>
+                  </div>
+                  <div className="px-4 py-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-surface-900">{record.departmentName}</span>
+                      <span className="text-xl font-bold text-surface-900 font-mono">
+                        {record.totalScore}<span className="text-xs font-normal text-surface-400">/50</span>
+                      </span>
+                    </div>
+                    {isEditing ? (
+                      <div className="space-y-2 pt-2 border-t border-surface-100">
+                        <div>
+                          <label className="text-xs font-medium text-surface-500">점검자</label>
+                          <input
+                            type="text"
+                            className="w-full mt-0.5 px-3 py-2 text-sm border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            value={editForm.inspector || ""}
+                            onChange={(e) => setEditForm({ ...editForm, inspector: e.target.value })}
+                          />
+                        </div>
+                        {categories.map(c => (
+                          <div key={c.key} className="flex items-center justify-between">
+                            <label className="text-sm text-surface-600">{c.name}</label>
+                            <input
+                              type="number" min="0" max="10"
+                              className="w-16 px-2 py-1.5 text-center text-sm border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              value={editForm.scores?.[c.key as keyof RecordDoc['scores']] ?? 0}
+                              onChange={(e) => handleScoreChange(c.key as keyof RecordDoc['scores'], e.target.value)}
+                            />
+                          </div>
+                        ))}
+                        <div>
+                          <label className="text-xs font-medium text-surface-500">특이사항</label>
+                          <input
+                            type="text"
+                            className="w-full mt-0.5 px-3 py-2 text-sm border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            value={editForm.notes || ""}
+                            onChange={(e) => handleNotesChange(e.target.value)}
+                          />
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                          <button onClick={() => saveEdit(record.id)} className="flex-1 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700">저장</button>
+                          <button onClick={cancelEdit} className="flex-1 py-2.5 bg-surface-100 text-surface-700 rounded-lg text-sm font-medium hover:bg-surface-200">취소</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm text-surface-600">점검자: <span className="font-medium text-surface-900">{record.inspector || "—"}</span></p>
+                        {focusCat && (
+                          <p className="text-xs text-teal-700 bg-teal-50 border border-teal-100 rounded-md px-2 py-1">
+                            중점: {focusCat.name} · {record.totalScore}/{focusCat.max}점
+                          </p>
+                        )}
+                        {record.notes && (
+                          <p className="text-sm text-surface-600 bg-surface-50 rounded-md px-3 py-2 break-words">{record.notes}</p>
+                        )}
+                        <div className="flex gap-2 pt-1">
+                          {pendingDeleteId === record.id ? (
+                            <>
+                              <span className="text-xs text-surface-500 self-center mr-1">삭제할까요?</span>
+                              <button onClick={() => softDeleteRecord(record.id)} className="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700">확인</button>
+                              <button onClick={() => setPendingDeleteId(null)} className="flex-1 py-2.5 bg-surface-100 text-surface-700 rounded-lg text-sm font-medium hover:bg-surface-200">취소</button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => startEdit(record)}
+                                aria-label={`${record.departmentName} 점검 기록 수정`}
+                                className="flex-1 py-2.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg text-sm font-medium hover:bg-primary-100"
+                              >수정</button>
+                              <button
+                                onClick={() => setPendingDeleteId(record.id)}
+                                aria-label={`${record.departmentName} 점검 기록 삭제`}
+                                className="flex-1 py-2.5 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-100"
+                              >삭제</button>
+                            </>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
@@ -686,33 +883,31 @@ export function DataManagement() {
                                 <button onClick={() => saveEdit(record.id)} className="px-2 py-1 bg-primary-600 text-white rounded text-xs hover:bg-primary-700">저장</button>
                                 <button onClick={cancelEdit} className="px-2 py-1 bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300">취소</button>
                               </div>
+                            ) : pendingDeleteId === record.id ? (
+                              <div className="flex justify-end gap-1.5 items-center">
+                                <span className="text-xs text-surface-400">삭제할까요?</span>
+                                <button
+                                  onClick={() => softDeleteRecord(record.id)}
+                                  className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+                                >확인</button>
+                                <button
+                                  onClick={() => setPendingDeleteId(null)}
+                                  className="px-2 py-1 bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300"
+                                >취소</button>
+                              </div>
                             ) : (
-                              {pendingDeleteId === record.id ? (
-                                <div className="flex justify-end gap-1.5 items-center">
-                                  <span className="text-xs text-surface-400">삭제할까요?</span>
-                                  <button
-                                    onClick={() => deleteRecord(record.id)}
-                                    className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
-                                  >확인</button>
-                                  <button
-                                    onClick={() => setPendingDeleteId(null)}
-                                    className="px-2 py-1 bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300"
-                                  >취소</button>
-                                </div>
-                              ) : (
-                                <div className="flex justify-end gap-2 items-center">
-                                  <button
-                                    onClick={() => startEdit(record)}
-                                    aria-label={`${record.departmentName} 점검 기록 수정`}
-                                    className="px-2 py-1 text-primary-600 bg-primary-50 border border-primary-200 rounded text-xs hover:bg-primary-100"
-                                  >수정</button>
-                                  <button
-                                    onClick={() => setPendingDeleteId(record.id)}
-                                    aria-label={`${record.departmentName} 점검 기록 삭제`}
-                                    className="px-2 py-1 text-red-600 bg-red-50 border border-red-200 rounded text-xs hover:bg-red-100"
-                                  >삭제</button>
-                                </div>
-                              )}
+                              <div className="flex justify-end gap-2 items-center">
+                                <button
+                                  onClick={() => startEdit(record)}
+                                  aria-label={`${record.departmentName} 점검 기록 수정`}
+                                  className="px-2 py-1 text-primary-600 bg-primary-50 border border-primary-200 rounded text-xs hover:bg-primary-100"
+                                >수정</button>
+                                <button
+                                  onClick={() => setPendingDeleteId(record.id)}
+                                  aria-label={`${record.departmentName} 점검 기록 삭제`}
+                                  className="px-2 py-1 text-red-600 bg-red-50 border border-red-200 rounded text-xs hover:bg-red-100"
+                                >삭제</button>
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -740,13 +935,22 @@ export function DataManagement() {
                 })}
               </select>
             </div>
-            <button
-              onClick={exportAggregateCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              CSV 내보내기
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exportAggregateCSV}
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                CSV
+              </button>
+              <button
+                onClick={exportAggregateXLSX}
+                className="flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Excel
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
