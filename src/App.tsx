@@ -18,6 +18,7 @@ import { Events } from "./pages/Events";
 import { AuthProvider, useAuth } from "./components/auth/AuthProvider";
 import { OrganizationProvider } from "./components/layout/OrganizationProvider";
 import { SettingsProvider } from "./components/layout/SettingsProvider";
+import { ToastProvider } from "./components/ui/Toast";
 
 function AppRoutes() {
   const { loading } = useAuth();
@@ -51,7 +52,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <ToastProvider>
+          <AppRoutes />
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

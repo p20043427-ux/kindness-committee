@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
+import { useToast } from "@/src/components/ui/Toast";
 
 export interface CommitteeMember {
   id: string;
@@ -12,6 +13,7 @@ export interface CommitteeMember {
 }
 
 export function Committee() {
+  const { toast } = useToast();
   const [members, setMembers] = useState<CommitteeMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -67,7 +69,7 @@ export function Committee() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      alert("이름을 입력해주세요.");
+      toast("이름을 입력해주세요.", "warning");
       return;
     }
 
@@ -92,7 +94,7 @@ export function Committee() {
       resetForm();
     } catch (error: any) {
       console.error("Error saving member:", error);
-      alert("직원 정보를 저장하는 중 오류가 발생했습니다: " + error.message);
+      toast("저장 중 오류가 발생했습니다: " + error.message, "error");
     }
   };
 
@@ -103,7 +105,7 @@ export function Committee() {
       setDeletingId(null);
     } catch (error: any) {
       console.error("Error deleting member:", error);
-      alert("삭제 중 오류가 발생했습니다: " + error.message);
+      toast("삭제 중 오류가 발생했습니다: " + error.message, "error");
     }
   };
 

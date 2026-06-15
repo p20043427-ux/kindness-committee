@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useMemo } from "react";
+import { useToast } from "@/src/components/ui/Toast";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery, rowToRecord, computeStatus, CategoryScores } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
@@ -31,10 +32,12 @@ export interface RecordDoc {
 
 export function DataManagement() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
   const { categories, categoryName } = useSettings();
   const [allRecords, setAllRecords] = useState<RecordDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // Tabs
   const [activeTab, setActiveTab] = useState<"raw" | "aggregate">("raw");
@@ -365,19 +368,19 @@ export function DataManagement() {
       setEditingId(null);
     } catch (error) {
       console.error("저장 오류:", error);
-      alert("문서 업데이트 중 오류가 발생했습니다.");
+      toast("수정 저장 중 오류가 발생했습니다.", "error");
     }
   };
 
   const deleteRecord = async (id: string) => {
-    if (confirm("정말 이 데이터를 삭제하시겠습니까? (이 작업은 되돌릴 수 없습니다.)")) {
-      try {
-        const { error } = await supabase.from("kc_records").delete().eq("id", id);
-        if (error) throw error;
-      } catch (error) {
-        console.error("삭제 오류:", error);
-        alert("문서 삭제 중 오류가 발생했습니다.");
-      }
+    try {
+      const { error } = await supabase.from("kc_records").delete().eq("id", id);
+      if (error) throw error;
+      setPendingDeleteId(null);
+      toast("점검 기록이 삭제되었습니다.", "success");
+    } catch (error) {
+      console.error("삭제 오류:", error);
+      toast("삭제 중 오류가 발생했습니다.", "error");
     }
   };
 
@@ -684,18 +687,32 @@ export function DataManagement() {
                                 <button onClick={cancelEdit} className="px-2 py-1 bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300">취소</button>
                               </div>
                             ) : (
-                              <div className="flex justify-end gap-2 items-center">
-                                <button
-                                  onClick={() => startEdit(record)}
-                                  aria-label={`${record.departmentName} 점검 기록 수정`}
-                                  className="px-2 py-1 text-primary-600 bg-primary-50 border border-primary-200 rounded text-xs hover:bg-primary-100"
-                                >수정</button>
-                                <button
-                                  onClick={() => deleteRecord(record.id)}
-                                  aria-label={`${record.departmentName} 점검 기록 삭제`}
-                                  className="px-2 py-1 text-red-600 bg-red-50 border border-red-200 rounded text-xs hover:bg-red-100"
-                                >삭제</button>
-                              </div>
+                              {pendingDeleteId === record.id ? (
+                                <div className="flex justify-end gap-1.5 items-center">
+                                  <span className="text-xs text-surface-400">삭제할까요?</span>
+                                  <button
+                                    onClick={() => deleteRecord(record.id)}
+                                    className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+                                  >확인</button>
+                                  <button
+                                    onClick={() => setPendingDeleteId(null)}
+                                    className="px-2 py-1 bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300"
+                                  >취소</button>
+                                </div>
+                              ) : (
+                                <div className="flex justify-end gap-2 items-center">
+                                  <button
+                                    onClick={() => startEdit(record)}
+                                    aria-label={`${record.departmentName} 점검 기록 수정`}
+                                    className="px-2 py-1 text-primary-600 bg-primary-50 border border-primary-200 rounded text-xs hover:bg-primary-100"
+                                  >수정</button>
+                                  <button
+                                    onClick={() => setPendingDeleteId(record.id)}
+                                    aria-label={`${record.departmentName} 점검 기록 삭제`}
+                                    className="px-2 py-1 text-red-600 bg-red-50 border border-red-200 rounded text-xs hover:bg-red-100"
+                                  >삭제</button>
+                                </div>
+                              )}
                             )}
                           </td>
                         </tr>

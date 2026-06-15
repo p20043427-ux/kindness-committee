@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useToast } from "@/src/components/ui/Toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
@@ -9,6 +10,7 @@ import { supabase } from "@/src/lib/supabase";
 export function Admin() {
   const { buildings, departments } = useOrganization();
   const { categories, monthlyFocus, saveCategories, saveMonthlyFocus, categoryName } = useSettings();
+  const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
 
   // 점검 항목 설정 편집 상태
@@ -33,17 +35,17 @@ export function Admin() {
 
   const handleSaveCategories = async () => {
     if (catDraft.some(c => !c.name.trim())) {
-      alert("카테고리 이름은 비워둘 수 없습니다.");
+      toast("카테고리 이름은 비워둘 수 없습니다.", "warning");
       return;
     }
     setIsSaving(true);
     try {
       await saveCategories(catDraft.map(c => ({ ...c, name: c.name.trim(), details: c.details.trim() })));
-      alert("친절점검 카테고리가 저장되었습니다. ✅");
+      toast("친절점검 카테고리가 저장되었습니다.", "success");
       setEditSection(null);
     } catch (e) {
       console.error(e);
-      alert("저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      toast("저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -61,11 +63,11 @@ export function Admin() {
     setIsSaving(true);
     try {
       await saveMonthlyFocus(focusDraft);
-      alert("월별 중점사항이 저장되었습니다. ✅");
+      toast("월별 중점사항이 저장되었습니다.", "success");
       setEditSection(null);
     } catch (e) {
       console.error(e);
-      alert("저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      toast("저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -112,7 +114,7 @@ export function Admin() {
       document.body.removeChild(link);
     } catch (e) {
       console.error(e);
-      alert("백업 중 오류가 발생했습니다.");
+      toast("백업 중 오류가 발생했습니다.", "error");
     } finally {
       setIsExporting(false);
     }
