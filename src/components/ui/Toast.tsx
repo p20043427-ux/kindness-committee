@@ -2,15 +2,21 @@ import React, { createContext, useContext, useState, useCallback, useRef } from 
 
 type ToastType = "success" | "error" | "info" | "warning";
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface Toast {
   id: number;
   message: string;
   type: ToastType;
+  action?: ToastAction;
 }
 
 interface ToastContextValue {
-  toast: (message: string, type?: ToastType) => void;
-  success: (message: string) => void;
+  toast: (message: string, type?: ToastType, action?: ToastAction) => void;
+  success: (message: string, action?: ToastAction) => void;
   error: (message: string) => void;
   info: (message: string) => void;
   warning: (message: string) => void;
@@ -32,6 +38,13 @@ const STYLES: Record<ToastType, string> = {
   warning: "bg-amber-50 text-amber-800 border border-amber-200",
 };
 
+const ACTION_STYLES: Record<ToastType, string> = {
+  success: "text-white/80 hover:text-white border border-white/30 hover:border-white/60",
+  error: "text-white/80 hover:text-white border border-white/30 hover:border-white/60",
+  info: "text-surface-600 hover:text-surface-900 border border-surface-300 hover:border-surface-500",
+  warning: "text-amber-700 hover:text-amber-900 border border-amber-300 hover:border-amber-500",
+};
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const counterRef = useRef(0);
@@ -40,15 +53,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const toast = useCallback((message: string, type: ToastType = "success") => {
+  const toast = useCallback((message: string, type: ToastType = "success", action?: ToastAction) => {
     const id = ++counterRef.current;
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => dismiss(id), 3500);
+    setToasts(prev => [...prev, { id, message, type, action }]);
+    // Action toasts stay longer (5 seconds) to give time for undo
+    setTimeout(() => dismiss(id), action ? 5000 : 3500);
   }, [dismiss]);
 
   const ctx: ToastContextValue = {
     toast,
-    success: (m) => toast(m, "success"),
+    success: (m, action) => toast(m, "success", action),
     error: (m) => toast(m, "error"),
     info: (m) => toast(m, "info"),
     warning: (m) => toast(m, "warning"),
@@ -67,13 +81,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             className={`
-              flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium
+              flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium
               animate-in slide-in-from-bottom-3 fade-in duration-200 pointer-events-auto
               ${STYLES[t.type]}
             `}
           >
             <span className="shrink-0 font-bold">{ICONS[t.type]}</span>
             <span className="flex-1 leading-snug">{t.message}</span>
+            {t.action && (
+              <button
+                onClick={() => { t.action!.onClick(); dismiss(t.id); }}
+                className={`shrink-0 px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${ACTION_STYLES[t.type]}`}
+              >
+                {t.action.label}
+              </button>
+            )}
             <button
               onClick={() => dismiss(t.id)}
               aria-label="알림 닫기"

@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useMemo } from "react";
+import { SkeletonBuildingCard } from "@/src/components/ui/Skeleton";
 import { useToast } from "@/src/components/ui/Toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
@@ -244,7 +245,11 @@ export function Monitoring() {
       </div>
 
       {isLoading || orgLoading ? (
-        <div className="flex justify-center p-12 text-surface-400">데이터를 불러오는 중입니다...</div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <SkeletonBuildingCard key={i} />
+          ))}
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="flex lg:hidden space-x-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">

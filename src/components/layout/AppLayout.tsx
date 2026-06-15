@@ -1,6 +1,7 @@
 import { Outlet } from "react-router";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
+import { GlobalSearch } from "@/src/components/features/GlobalSearch";
 import { useState } from "react";
 
 export function AppLayout() {
@@ -18,6 +19,8 @@ export function AppLayout() {
         </main>
       </div>
       
+      <GlobalSearch />
+
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <div 
