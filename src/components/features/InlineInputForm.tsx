@@ -232,13 +232,19 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
                       <button
                         type="button"
                         onClick={() => setSubScore(focusCat.key, sub.key, Math.max(0, val - 1))}
-                        className="w-7 h-7 rounded-md border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 font-bold flex items-center justify-center text-base leading-none"
+                        aria-label={`${sub.name} 점수 감소`}
+                        className="w-10 h-10 rounded-lg border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 active:bg-surface-200 font-bold flex items-center justify-center text-lg transition-colors"
                       >−</button>
-                      <span className="font-mono font-bold text-sm w-12 text-center tabular-nums">{val} / {sub.max}</span>
+                      <span
+                        className="font-mono font-bold text-sm w-14 text-center tabular-nums"
+                        aria-live="polite"
+                        aria-label={`${sub.name} ${val}점`}
+                      >{val} / {sub.max}</span>
                       <button
                         type="button"
                         onClick={() => setSubScore(focusCat.key, sub.key, Math.min(sub.max, val + 1))}
-                        className="w-7 h-7 rounded-md border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 font-bold flex items-center justify-center text-base leading-none"
+                        aria-label={`${sub.name} 점수 증가`}
+                        className="w-10 h-10 rounded-lg border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 active:bg-surface-200 font-bold flex items-center justify-center text-lg transition-colors"
                       >+</button>
                     </div>
                   </div>
