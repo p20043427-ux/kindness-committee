@@ -4,7 +4,7 @@ import { liveQuery, rowToRecord, computeStatus, CategoryScores } from "@/src/lib
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
-import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown } from "lucide-react";
+import { Download, CalendarDays, BarChart2, ArrowUp, ArrowDown, ChevronRight } from "lucide-react";
 
 export interface RecordDoc {
   id: string;
@@ -61,6 +61,9 @@ export function DataManagement() {
     setFilterBuildingId(bid);
     setFilterDepartmentId("");
   };
+
+  // Column visibility
+  const [showCategoryColumns, setShowCategoryColumns] = useState(false);
 
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -514,7 +517,17 @@ export function DataManagement() {
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('departmentName')}>부서명{renderRawSortIcon('departmentName')}</th>
                     <th className="py-3 px-4 font-semibold cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('inspector')}>점검자{renderRawSortIcon('inspector')}</th>
                     <th className="py-3 px-4 font-semibold text-center whitespace-nowrap bg-teal-50 text-teal-700">중점사항</th>
-                    {categories.map(c => (
+                    <th className="py-3 px-4 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => setShowCategoryColumns(p => !p)}
+                        className="inline-flex items-center gap-0.5 text-xs font-semibold text-surface-400 hover:text-surface-700 transition-colors"
+                        title={showCategoryColumns ? "카테고리 점수 숨기기" : "카테고리 점수 펼치기"}
+                      >
+                        카테고리
+                        <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showCategoryColumns ? "rotate-90" : ""}`} />
+                      </button>
+                    </th>
+                    {showCategoryColumns && categories.map(c => (
                       <th key={c.key} className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort(c.key as RawSortKey)}>{c.name}{renderRawSortIcon(c.key as RawSortKey)}</th>
                     ))}
                     <th className="py-3 px-4 font-semibold text-center cursor-pointer hover:bg-surface-100 select-none whitespace-nowrap" onClick={() => handleRawSort('totalScore')}>총점{renderRawSortIcon('totalScore')}</th>
@@ -590,36 +603,44 @@ export function DataManagement() {
                               <span className="text-surface-300 text-xs">—</span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.greeting} onChange={(e) => handleScoreChange('greeting', e.target.value)} />
-                            ) : record.scores?.greeting || 0}
+                          {/* 카테고리별 점수 열 — 토글로 표시/숨김 */}
+                          <td className="py-3 px-4 text-center text-surface-300 text-xs">
+                            {showCategoryColumns ? null : "—"}
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.response} onChange={(e) => handleScoreChange('response', e.target.value)} />
-                            ) : record.scores?.response || 0}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.phone} onChange={(e) => handleScoreChange('phone', e.target.value)} />
-                            ) : record.scores?.phone || 0}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.appearance} onChange={(e) => handleScoreChange('appearance', e.target.value)} />
-                            ) : record.scores?.appearance || 0}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            {isEditing ? (
-                              <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
-                                value={editForm.scores?.environment} onChange={(e) => handleScoreChange('environment', e.target.value)} />
-                            ) : record.scores?.environment || 0}
-                          </td>
+                          {showCategoryColumns && (
+                            <>
+                              <td className="py-3 px-4 text-center">
+                                {isEditing ? (
+                                  <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                    value={editForm.scores?.greeting} onChange={(e) => handleScoreChange('greeting', e.target.value)} />
+                                ) : record.scores?.greeting || 0}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {isEditing ? (
+                                  <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                    value={editForm.scores?.response} onChange={(e) => handleScoreChange('response', e.target.value)} />
+                                ) : record.scores?.response || 0}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {isEditing ? (
+                                  <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                    value={editForm.scores?.phone} onChange={(e) => handleScoreChange('phone', e.target.value)} />
+                                ) : record.scores?.phone || 0}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {isEditing ? (
+                                  <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                    value={editForm.scores?.appearance} onChange={(e) => handleScoreChange('appearance', e.target.value)} />
+                                ) : record.scores?.appearance || 0}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                {isEditing ? (
+                                  <input type="number" min="0" max="10" className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded"
+                                    value={editForm.scores?.environment} onChange={(e) => handleScoreChange('environment', e.target.value)} />
+                                ) : record.scores?.environment || 0}
+                              </td>
+                            </>
+                          )}
                           <td className="py-3 px-4 text-center font-bold text-surface-900">
                             {isEditing ? editForm.totalScore : record.totalScore}
                           </td>
@@ -664,8 +685,16 @@ export function DataManagement() {
                               </div>
                             ) : (
                               <div className="flex justify-end gap-2 items-center">
-                                <button onClick={() => startEdit(record)} className="px-2 py-1 text-primary-600 bg-primary-50 border border-primary-200 rounded text-xs hover:bg-primary-100">수정</button>
-                                <button onClick={() => deleteRecord(record.id)} className="px-2 py-1 text-red-600 bg-red-50 border border-red-200 rounded text-xs hover:bg-red-100">삭제</button>
+                                <button
+                                  onClick={() => startEdit(record)}
+                                  aria-label={`${record.departmentName} 점검 기록 수정`}
+                                  className="px-2 py-1 text-primary-600 bg-primary-50 border border-primary-200 rounded text-xs hover:bg-primary-100"
+                                >수정</button>
+                                <button
+                                  onClick={() => deleteRecord(record.id)}
+                                  aria-label={`${record.departmentName} 점검 기록 삭제`}
+                                  className="px-2 py-1 text-red-600 bg-red-50 border border-red-200 rounded text-xs hover:bg-red-100"
+                                >삭제</button>
                               </div>
                             )}
                           </td>

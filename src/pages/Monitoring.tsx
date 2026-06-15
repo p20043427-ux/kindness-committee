@@ -178,7 +178,7 @@ export function Monitoring() {
     switch (status) {
       case "정상": return "bg-primary-50 border-primary-200 text-primary-700";
       case "주의": return "bg-amber-50 border-amber-200 text-amber-700";
-      case "긴급": return "bg-red-50 border-red-200 text-red-700 animate-pulse";
+      case "긴급": return "bg-red-50 border-red-200 text-red-700 motion-safe:animate-pulse";
       default: return "bg-surface-50 border-surface-200 text-surface-500 hover:bg-surface-100 cursor-pointer";
     }
   };
