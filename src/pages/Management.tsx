@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { useOrganization, Building, Department } from "@/src/components/layout/OrganizationProvider";
+import { useToast } from "@/src/components/ui/Toast";
 
 export function Management() {
   const { buildings, departments, addBuilding, updateBuilding, deleteBuilding, addDepartment, updateDepartment, deleteDepartment } = useOrganization();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"buildings" | "departments">("buildings");
 
   // Building State
@@ -11,6 +13,8 @@ export function Management() {
   const [editBuildingName, setEditBuildingName] = useState("");
   const [newBuildingId, setNewBuildingId] = useState("");
   const [newBuildingName, setNewBuildingName] = useState("");
+  const [pendingDeleteBldId, setPendingDeleteBldId] = useState<string | null>(null);
+  const [pendingDeleteDeptId, setPendingDeleteDeptId] = useState<string | null>(null);
 
   // Department State
   const [editDeptId, setEditDeptId] = useState<string | null>(null);
@@ -34,9 +38,9 @@ export function Management() {
   };
 
   const handleDeleteBuilding = async (id: string) => {
-    if (confirm("정말로 이 건물을 삭제하시겠습니까? 관련된 부서 코드가 있다면 오류가 발생할 수 있습니다.")) {
-      await deleteBuilding(id);
-    }
+    await deleteBuilding(id);
+    setPendingDeleteBldId(null);
+    toast("건물이 삭제되었습니다.", "success");
   };
 
   const handleAddDept = async () => {
@@ -53,9 +57,9 @@ export function Management() {
   };
 
   const handleDeleteDept = async (id: string) => {
-    if (confirm("정말로 이 부서를 삭제하시겠습니까?")) {
-      await deleteDepartment(id);
-    }
+    await deleteDepartment(id);
+    setPendingDeleteDeptId(null);
+    toast("부서가 삭제되었습니다.", "success");
   };
 
   return (
@@ -143,10 +147,16 @@ export function Management() {
                             <button onClick={() => handleSaveBuilding(b.id)} className="text-green-600 font-medium text-sm hover:underline">저장</button>
                             <button onClick={() => setEditBuildingId(null)} className="text-surface-500 font-medium text-sm hover:underline">취소</button>
                           </>
+                        ) : pendingDeleteBldId === b.id ? (
+                          <>
+                            <span className="text-xs text-surface-500">정말 삭제?</span>
+                            <button onClick={() => handleDeleteBuilding(b.id)} className="text-red-600 font-semibold text-sm hover:underline">확인</button>
+                            <button onClick={() => setPendingDeleteBldId(null)} className="text-surface-500 font-medium text-sm hover:underline">취소</button>
+                          </>
                         ) : (
                           <>
                             <button onClick={() => { setEditBuildingId(b.id); setEditBuildingName(b.name); }} className="text-primary-600 font-medium text-sm hover:underline">수정</button>
-                            <button onClick={() => handleDeleteBuilding(b.id)} className="text-red-500 font-medium text-sm hover:underline">삭제</button>
+                            <button onClick={() => setPendingDeleteBldId(b.id)} className="text-red-500 font-medium text-sm hover:underline">삭제</button>
                           </>
                         )}
                       </td>
@@ -249,10 +259,16 @@ export function Management() {
                             <button onClick={() => handleSaveDept(d.id)} className="text-green-600 font-medium text-sm hover:underline">저장</button>
                             <button onClick={() => setEditDeptId(null)} className="text-surface-500 font-medium text-sm hover:underline">취소</button>
                           </>
+                        ) : pendingDeleteDeptId === d.id ? (
+                          <>
+                            <span className="text-xs text-surface-500">정말 삭제?</span>
+                            <button onClick={() => handleDeleteDept(d.id)} className="text-red-600 font-semibold text-sm hover:underline">확인</button>
+                            <button onClick={() => setPendingDeleteDeptId(null)} className="text-surface-500 font-medium text-sm hover:underline">취소</button>
+                          </>
                         ) : (
                           <>
                             <button onClick={() => { setEditDeptId(d.id); setEditDeptName(d.name); setEditDeptBld(d.buildingId); }} className="text-primary-600 font-medium text-sm hover:underline">수정</button>
-                            <button onClick={() => handleDeleteDept(d.id)} className="text-red-500 font-medium text-sm hover:underline">삭제</button>
+                            <button onClick={() => setPendingDeleteDeptId(d.id)} className="text-red-500 font-medium text-sm hover:underline">삭제</button>
                           </>
                         )}
                       </td>

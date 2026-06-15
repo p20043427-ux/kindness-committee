@@ -2,6 +2,7 @@
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { CommitteeMember } from "./Committee";
+import { useToast } from "@/src/components/ui/Toast";
 
 interface InspectionSchedule {
   id: string;
@@ -14,6 +15,7 @@ interface InspectionSchedule {
 }
 
 export function Schedule() {
+  const { toast } = useToast();
   const [schedules, setSchedules] = useState<InspectionSchedule[]>([]);
   const [members, setMembers] = useState<CommitteeMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,7 +85,7 @@ export function Schedule() {
       },
       (error) => {
         console.error("Error fetching schedules:", error);
-        alert(`스케줄 조회 오류: ${error.message}`);
+        toast(`스케줄 조회 오류: ${error.message}`, "error");
         setIsLoading(false);
       }
     );
@@ -124,7 +126,7 @@ export function Schedule() {
       setDeletingId(null);
     } catch (error: any) {
       console.error("Error deleting member:", error);
-      alert("삭제 중 오류가 발생했습니다: " + error.message);
+      toast("삭제 중 오류가 발생했습니다: " + error.message, "error");
     }
   };
 
@@ -154,7 +156,7 @@ export function Schedule() {
       resetForm();
     } catch (error) {
       console.error("Error saving schedule:", error);
-      alert(`저장 중 오류가 발생했습니다: ${error}`);
+      toast(`저장 중 오류가 발생했습니다.`, "error");
     }
   };
 
@@ -164,7 +166,7 @@ export function Schedule() {
         return { ...prev, inspectors: prev.inspectors.filter(n => n !== memberName) };
       } else {
         if (prev.inspectors.length >= 2) {
-          alert("한 회차당 점검자는 최대 2명까지만 선택할 수 있습니다.");
+          toast("한 회차당 점검자는 최대 2명까지만 선택할 수 있습니다.", "warning");
           return prev;
         }
         return { ...prev, inspectors: [...prev.inspectors, memberName] };

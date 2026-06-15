@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, useMemo } from "react";
+import { useToast } from "@/src/components/ui/Toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
 import { supabase } from "@/src/lib/supabase";
@@ -24,6 +25,7 @@ interface RecordData {
 
 export function Monitoring() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { buildings, departments, isLoading: orgLoading } = useOrganization();
   const { categories, getFocusForMonth, categoryName } = useSettings();
   const [records, setRecords] = useState<RecordData[]>([]);
@@ -90,7 +92,7 @@ export function Monitoring() {
       },
       (error) => {
         console.error("Error fetching historical records:", error);
-        alert("데이터를 가져오는 중 오류가 발생했습니다. 권한이나 네트워크를 확인해주세요.");
+        toast("데이터를 가져오는 중 오류가 발생했습니다. 권한이나 네트워크를 확인해주세요.", "error");
         setIsLoading(false);
       }
     );
@@ -119,7 +121,7 @@ export function Monitoring() {
       const filteredDocs: any[] = data || [];
 
       if (filteredDocs.length === 0) {
-        alert("해당 일자에 내보낼 점검 데이터가 없습니다.");
+        toast("해당 일자에 내보낼 점검 데이터가 없습니다.", "info");
         setIsExporting(false);
         return;
       }
@@ -164,7 +166,7 @@ export function Monitoring() {
       
     } catch (error) {
       console.error("Export error:", error);
-      alert("데이터 내보내기 중 오류가 발생했습니다.");
+      toast("데이터 내보내기 중 오류가 발생했습니다.", "error");
     } finally {
       setIsExporting(false);
     }

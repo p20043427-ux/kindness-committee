@@ -5,6 +5,7 @@ import { CategoryScores } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
+import { useToast } from "@/src/components/ui/Toast";
 
 interface InlineInputFormProps {
   buildingId: string;
@@ -31,6 +32,7 @@ function focusStatus(score: number, notes: string): '정상' | '주의' | '긴�
 
 export function InlineInputForm({ buildingId, departmentId, inspectionDate, defaultInspector = "", defaultFocus = "", defaultSubScores, defaultNotes = "", isEditing = false, members = [], onSuccess, onCancel }: InlineInputFormProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { departments } = useOrganization();
   const { categories, getFocusForMonth } = useSettings();
 
@@ -146,11 +148,12 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       }
       if (error) throw error;
 
-      alert(`${inspector}님의 친절점검 결과가 동기화되었습니다. ✅`);
+      toast(`${inspector}님의 친절점검 결과가 저장되었습니다.`, "success");
       onSuccess();
     } catch (error) {
       console.error("Error adding document: ", error);
       setErrorMessage("서버 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      toast("저장 중 오류가 발생했습니다.", "error");
     } finally {
       setIsSubmitting(false);
     }

@@ -2,6 +2,7 @@
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { CommitteeMember } from "./Committee";
+import { useToast } from "@/src/components/ui/Toast";
 
 interface CommitteeEvent {
   id: string;
@@ -14,6 +15,7 @@ interface CommitteeEvent {
 }
 
 export function Events() {
+  const { toast } = useToast();
   const [events, setEvents] = useState<CommitteeEvent[]>([]);
   const [members, setMembers] = useState<CommitteeMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,7 +85,7 @@ export function Events() {
       },
       (error) => {
         console.error("Error fetching events:", error);
-        alert(`행사 정보 조회 오류: ${error.message}`);
+        toast(`행사 정보 조회 오류: ${error.message}`, "error");
         setIsLoading(false);
       }
     );
@@ -124,14 +126,14 @@ export function Events() {
       setDeletingId(null);
     } catch (error: any) {
       console.error("Error deleting event:", error);
-      alert("삭제 중 오류가 발생했습니다: " + error.message);
+      toast("삭제 중 오류가 발생했습니다: " + error.message, "error");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.date || !formData.title.trim()) {
-      alert("일자 및 행사명을 입력해주세요.");
+      toast("일자 및 행사명을 입력해주세요.", "warning");
       return;
     }
     
@@ -156,7 +158,7 @@ export function Events() {
       resetForm();
     } catch (error: any) {
       console.error("Error saving event:", error);
-      alert(`저장 중 오류가 발생했습니다: ${error.message}`);
+      toast(`저장 중 오류가 발생했습니다: ${error.message}`, "error");
     }
   };
 
