@@ -45,7 +45,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    if (defaultInspector && !inspector) setInspector(defaultInspector);
+    if (defaultInspector) setInspector(defaultInspector);
   }, [defaultInspector]);
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
       } else {
         ({ error } = await supabase.from("kc_records").insert({
           ...payload,
-          id: "REC-" + Date.now().toString(36).toUpperCase(),
+          id: crypto.randomUUID(),
           created_at: nowIso,
         }));
       }
@@ -292,7 +292,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
 
       <div className="flex items-center justify-between pt-2">
         <span className="text-sm font-bold text-surface-700">
-          총점 <span className="text-primary-600 font-mono">{focusScore}</span> / 10
+          총점 <span className="text-primary-600 font-mono">{focusScore}</span> / {focusCat?.max ?? 10}
         </span>
         <div className="flex space-x-2">
           <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-lg border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors" disabled={isSubmitting}>

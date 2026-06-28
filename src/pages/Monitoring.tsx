@@ -98,6 +98,9 @@ export function Monitoring() {
       }
     );
 
+    if (expandedDeptId) {
+      toast("날짜가 변경되어 입력 중인 점검표가 닫혔습니다.", "warning");
+    }
     setExpandedDeptId(null); // 날짜 변경 시 폼 닫기
 
     return () => {

@@ -75,8 +75,9 @@ export function DataManagement() {
   const filterType         = (searchParams.get("type")    || "month")                as "month" | "range";
   const filterMonth        = searchParams.get("month")    || currentYearMonth;
   const filterYear         = searchParams.get("year")     || new Date().getFullYear().toString();
-  const filterBuildingId   = searchParams.get("building") || "";
-  const filterDepartmentId = searchParams.get("dept")     || "";
+  const filterBuildingId   = searchParams.get("building")  || "";
+  const filterDepartmentId = searchParams.get("dept")      || "";
+  const filterInspector    = searchParams.get("inspector") || "";
   const rawPage            = Math.max(0, parseInt(searchParams.get("page") || "0", 10));
 
   /* 날짜 범위: 로컬 state → debounce → URL 동기화 */
@@ -168,7 +169,7 @@ export function DataManagement() {
   useEffect(() => {
     updateParams({ page: "0" });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterMonth, filterType, startDate, endDate, filterBuildingId, filterDepartmentId]);
+  }, [filterMonth, filterType, startDate, endDate, filterBuildingId, filterDepartmentId, filterInspector]);
 
   /* ── 헬퍼 ──────────────────────────────────────────────────────────── */
   const getBuildingName = useCallback(
@@ -178,6 +179,12 @@ export function DataManagement() {
 
   const handleBuildingFilterChange = (bid: string) =>
     updateParams({ building: bid, dept: "", page: "0" });
+
+  /* 점검자 목록: 현재 조회된 레코드에서 유일값 추출 */
+  const inspectorOptions = useMemo(() => {
+    const names = new Set(allRecords.map(r => r.inspector).filter(Boolean));
+    return Array.from(names).sort();
+  }, [allRecords]);
 
   /* ── 가공 데이터 ─────────────────────────────────────────────────────── */
   const displayRecords = useMemo(() => {
@@ -190,6 +197,7 @@ export function DataManagement() {
       if (!inRange) return false;
       if (filterBuildingId   && r.buildingId   !== filterBuildingId)   return false;
       if (filterDepartmentId && r.departmentId !== filterDepartmentId) return false;
+      if (filterInspector    && r.inspector    !== filterInspector)    return false;
       return true;
     });
 
@@ -219,7 +227,7 @@ export function DataManagement() {
       });
     }
     return filtered;
-  }, [allRecords, filterType, filterMonth, startDate, endDate, filterBuildingId, filterDepartmentId, rawSortConfig, buildings, departments, hiddenIds, getBuildingName]);
+  }, [allRecords, filterType, filterMonth, startDate, endDate, filterBuildingId, filterDepartmentId, filterInspector, rawSortConfig, buildings, departments, hiddenIds, getBuildingName]);
 
   const totalPages       = Math.max(1, Math.ceil(displayRecords.length / PAGE_SIZE));
   const safePage         = Math.min(rawPage, totalPages - 1);
@@ -574,8 +582,19 @@ export function DataManagement() {
                 {(filterBuildingId ? departments.filter(d => d.buildingId === filterBuildingId) : departments)
                   .map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
-              {(filterBuildingId || filterDepartmentId) && (
-                <button onClick={() => updateParams({ building: "", dept: "", page: "0" })}
+              {inspectorOptions.length > 0 && (
+                <>
+                  <label htmlFor="filter-inspector" className="sr-only">점검자 필터</label>
+                  <select id="filter-inspector" value={filterInspector}
+                    onChange={e => updateParams({ inspector: e.target.value, page: "0" })}
+                    className="bg-white border border-surface-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
+                    <option value="">전체 점검자</option>
+                    {inspectorOptions.map(name => <option key={name} value={name}>{name}</option>)}
+                  </select>
+                </>
+              )}
+              {(filterBuildingId || filterDepartmentId || filterInspector) && (
+                <button onClick={() => updateParams({ building: "", dept: "", inspector: "", page: "0" })}
                   className={`text-xs text-surface-400 hover:text-surface-700 underline ${focusRing}`}>
                   필터 초기화
                 </button>

@@ -1,8 +1,12 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { CommitteeMember } from "./Committee";
 import { useToast } from "@/src/components/ui/Toast";
+import { PageHeader } from "@/src/components/ui/PageHeader";
+import { DeleteConfirmRow } from "@/src/components/ui/DeleteConfirmRow";
+import { MemberTogglePill } from "@/src/components/ui/MemberTogglePill";
+import { FormActions } from "@/src/components/ui/FormActions";
 
 interface CommitteeEvent {
   id: string;
@@ -20,9 +24,8 @@ export function Events() {
   const [members, setMembers] = useState<CommitteeMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Default to current month
   const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7));
-  
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -40,7 +43,6 @@ export function Events() {
   });
 
   useEffect(() => {
-    // Fetch members
     const unsubscribeMembers = liveQuery<any>(
       "kc_committee",
       () => supabase.from("kc_committee").select("*"),
@@ -61,7 +63,6 @@ export function Events() {
       (error) => console.error("Error fetching members:", error)
     );
 
-    // Fetch events
     const unsubscribeEvents = liveQuery<any>(
       "kc_events",
       () =>
@@ -124,9 +125,9 @@ export function Events() {
     try {
       const { error } = await supabase.from("kc_events").delete().eq("id", id);
       if (error) throw error;
+      toast("행사 기록이 삭제되었습니다.", "success");
       setDeletingId(null);
     } catch (error: any) {
-      console.error("Error deleting event:", error);
       toast("삭제 중 오류가 발생했습니다: " + error.message, "error");
     }
   };
@@ -137,9 +138,8 @@ export function Events() {
       toast("일자 및 행사명을 입력해주세요.", "warning");
       return;
     }
-    
-    const monthStr = formData.date.slice(0, 7);
 
+    const monthStr = formData.date.slice(0, 7);
     setIsSaving(true);
     try {
       const id = editingId || crypto.randomUUID();
@@ -158,7 +158,6 @@ export function Events() {
       toast(editingId ? "행사 기록이 수정되었습니다." : "행사 기록이 저장되었습니다.", "success");
       resetForm();
     } catch (error: any) {
-      console.error("Error saving event:", error);
       toast(`저장 중 오류가 발생했습니다: ${error.message}`, "error");
     } finally {
       setIsSaving(false);
@@ -204,26 +203,23 @@ export function Events() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">월별 행사 관리</h1>
-          <p className="text-surface-500 text-sm mt-1">위원회 단위의 행사, 회의 내역 및 참석자를 기록합니다.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <input
-            type="month"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            className="border border-surface-300 rounded-lg px-3 py-2 text-surface-900 font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium shadow-sm transition-colors whitespace-nowrap"
-          >
-            + 행사 기록
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="월별 행사 관리"
+        description="위원회 단위의 행사, 회의 내역 및 참석자를 기록합니다."
+      >
+        <input
+          type="month"
+          value={filterMonth}
+          onChange={(e) => setFilterMonth(e.target.value)}
+          className="border border-surface-300 rounded-lg px-3 py-2 text-surface-900 font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+        <button
+          onClick={() => setIsFormOpen(true)}
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium shadow-sm transition-colors whitespace-nowrap"
+        >
+          + 행사 기록
+        </button>
+      </PageHeader>
 
       {isFormOpen && (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-surface-200">
@@ -251,7 +247,7 @@ export function Events() {
                   required
                 />
               </div>
-              
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-surface-700 mb-1">상세 내용</label>
                 <textarea
@@ -265,47 +261,30 @@ export function Events() {
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-surface-700 mb-2">참석 위원 선택</label>
                 <div className="flex flex-wrap gap-2">
-                  {members.map(member => {
-                    const isSelected = formData.attendees.includes(member.name);
-                    return (
-                      <button
-                        key={member.id}
-                        type="button"
-                        aria-pressed={isSelected}
-                        onClick={() => toggleAttendee(member.name)}
-                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                          isSelected
-                            ? 'bg-primary-100 border-primary-500 text-primary-800 font-medium'
-                            : 'bg-white border-surface-300 text-surface-600 hover:bg-surface-50'
-                        }`}
-                      >
-                        {member.name}{member.department ? ` (${member.department})` : ''}
-                      </button>
-                    );
-                  })}
+                  {members.map(member => (
+                    <MemberTogglePill
+                      key={member.id}
+                      name={member.name}
+                      department={member.department}
+                      isSelected={formData.attendees.includes(member.name)}
+                      onToggle={() => toggleAttendee(member.name)}
+                    />
+                  ))}
                   {members.length === 0 && (
                     <span className="text-sm text-surface-500 italic">등록된 활동 위원이 없습니다. 위원회 명단 관리를 먼저 확인해주세요.</span>
                   )}
                 </div>
               </div>
             </div>
-            
-            <div className="flex justify-end gap-2 pt-4 border-t border-surface-100 mt-4">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 text-surface-600 bg-surface-100 hover:bg-surface-200 rounded-md font-medium transition-colors"
-              >
-                취소
-              </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                {isSaving ? "저장 중..." : editingId ? "수정완료" : "저장완료"}
-              </button>
-            </div>
+
+            <FormActions
+              isSaving={isSaving}
+              isEditing={!!editingId}
+              onCancel={resetForm}
+              saveLabel="저장완료"
+              editLabel="수정완료"
+              className="border-t border-surface-100 mt-4"
+            />
           </form>
         </div>
       )}
@@ -328,13 +307,13 @@ export function Events() {
                       {eventRecord.title}
                     </h3>
                   </div>
-                  
+
                   {eventRecord.description && (
                     <p className="text-sm text-surface-600 whitespace-pre-wrap mb-4 bg-white p-3 rounded-md border border-surface-100">
                       {eventRecord.description}
                     </p>
                   )}
-                  
+
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-surface-500">참석자:</span>
                     <div className="flex flex-wrap gap-1.5">
@@ -350,24 +329,16 @@ export function Events() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex gap-2 self-start pt-1">
                   {deletingId === eventRecord.id ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-red-600 font-medium whitespace-nowrap">삭제할까요?</span>
-                      <button
-                        onClick={() => handleDelete(eventRecord.id)}
-                        className="px-3 py-1.5 text-white bg-red-600 rounded-md text-sm hover:bg-red-700 font-medium transition-colors whitespace-nowrap"
-                      >
-                        네
-                      </button>
-                      <button
-                        onClick={() => setDeletingId(null)}
-                        className="px-3 py-1.5 text-surface-600 bg-surface-100 rounded-md text-sm hover:bg-surface-200 font-medium transition-colors whitespace-nowrap"
-                      >
-                        아니요
-                      </button>
-                    </div>
+                    <DeleteConfirmRow
+                      label="삭제할까요?"
+                      confirmLabel="네"
+                      cancelLabel="아니요"
+                      onConfirm={() => handleDelete(eventRecord.id)}
+                      onCancel={() => setDeletingId(null)}
+                    />
                   ) : (
                     <>
                       <button
