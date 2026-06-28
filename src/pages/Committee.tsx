@@ -109,7 +109,7 @@ export function Committee() {
   if (isLoading) {
     return (
       <div className="space-y-5 animate-in fade-in duration-300 max-w-4xl mx-auto">
-        <div className="flex justify-between items-center pb-4" style={{ borderBottom: "1px solid #D1D9E6" }}>
+        <div className="flex justify-between items-center pb-4 border-b border-surface-200">
           <div className="flex gap-3"><div className="w-0.5 h-8 bg-surface-200 rounded-full motion-safe:animate-pulse" /><div className="h-6 w-40 bg-surface-200 rounded motion-safe:animate-pulse" /></div>
           <div className="h-8 w-24 bg-surface-200 rounded motion-safe:animate-pulse" />
         </div>
@@ -217,8 +217,54 @@ export function Committee() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded border border-surface-200 overflow-hidden">
+      {/* Mobile card list */}
+      <div className="sm:hidden space-y-2">
+        {filteredMembers.length === 0 ? (
+          <div className="py-10 text-center text-xs text-surface-400 bg-white rounded border border-surface-200">
+            {searchQuery ? `"${searchQuery}"에 해당하는 위원이 없습니다.` : "등록된 위원이 없습니다."}
+          </div>
+        ) : filteredMembers.map(member => (
+          <div key={member.id} className="bg-white rounded border border-surface-200 overflow-hidden">
+            <div className="px-4 py-3 flex items-center justify-between border-b border-surface-100">
+              <span className="text-sm font-semibold text-surface-900">{member.name}</span>
+              <Badge variant={member.isActive ? "success" : "secondary"}>
+                {member.isActive ? "활동 중" : "비활동"}
+              </Badge>
+            </div>
+            <div className="px-4 py-2.5 space-y-1">
+              {member.department && (
+                <p className="text-xs text-surface-600"><span className="text-surface-400">소속</span> {member.department}</p>
+              )}
+              {member.role && (
+                <p className="text-xs text-surface-600"><span className="text-surface-400">역할</span> {member.role}</p>
+              )}
+            </div>
+            <div className="px-4 py-2.5 border-t border-surface-100 flex justify-end gap-1.5">
+              {deletingId === member.id ? (
+                <>
+                  <span className="text-xs text-red-600 font-medium self-center">삭제할까요?</span>
+                  <Button type="button" variant="danger" size="sm" onClick={() => handleDelete(member.id)}>네</Button>
+                  <Button type="button" variant="secondary" size="sm" onClick={() => setDeletingId(null)}>아니요</Button>
+                </>
+              ) : (
+                <>
+                  <Button type="button" variant="outline" size="sm" onClick={() => handleEdit(member)}>수정</Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setDeletingId(member.id)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50">삭제</Button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+        <div className="px-1 py-1.5">
+          <span className="text-[10px] text-surface-400 font-mono tabular-nums">
+            총 {members.length}명{searchQuery ? ` · 검색결과 ${filteredMembers.length}명` : ""}
+          </span>
+        </div>
+      </div>
+
+      {/* Table (desktop) */}
+      <div className="hidden sm:block bg-white rounded border border-surface-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left whitespace-nowrap">
             <thead>

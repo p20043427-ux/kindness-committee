@@ -1041,7 +1041,7 @@ export function DataManagement() {
                         return (
                           <td key={m} className="py-2 px-4 text-center border-l border-surface-50 font-mono">
                             {val !== null ? (
-                              <span className={val >= 45 ? "text-green-600 font-medium" : val < 35 ? "text-red-500 font-medium" : "text-surface-700"}>
+                              <span className={scoreBand(val, scoreMaxForBand)}>
                                 {val}
                               </span>
                             ) : <span className="text-surface-300" aria-label="데이터 없음">-</span>}
