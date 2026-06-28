@@ -63,3 +63,14 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-surface-400;
 }
+
+@media print {
+  nav, aside, header, .print-hidden,
+  button:not(.print-visible) { display: none !important; }
+  body { background: white !important; font-size: 12px; }
+  .rounded-xl, .rounded-lg { border-radius: 4px !important; }
+  .shadow-sm, .shadow { box-shadow: none !important; }
+  .border { border-color: #e2e8f0 !important; }
+  h1 { border-left: 3px solid #4f46e5 !important; padding-left: 8px !important; font-size: 18px !important; }
+  @page { margin: 16mm 12mm; }
+}

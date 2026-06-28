@@ -49,6 +49,14 @@ export interface RecordDoc {
   createdAt: string;
 }
 
+function scoreBand(val: number | undefined, max: number): string {
+  if (!val || val <= 0) return "text-surface-400";
+  const pct = val / max;
+  if (pct >= 0.8) return "inline-block px-1.5 rounded text-xs bg-green-50 text-green-700 font-bold";
+  if (pct >= 0.5) return "inline-block px-1.5 rounded text-xs bg-amber-50 text-amber-700 font-bold";
+  return "inline-block px-1.5 rounded text-xs bg-red-50 text-red-700 font-bold";
+}
+
 export function DataManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -60,6 +68,7 @@ export function DataManagement() {
   const currentYearMonth = new Date().toISOString().slice(0, 7);
   const today            = new Date().toISOString().split("T")[0];
   const firstOfMonth     = (() => { const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0]; })();
+  const prevYearMonth    = (() => { const [y, m] = currentYearMonth.split("-").map(Number); return `${m === 1 ? y - 1 : y}-${String(m === 1 ? 12 : m - 1).padStart(2, "0")}`; })();
 
   const updateParams = useCallback((updates: Record<string, string>) => {
     setSearchParams(prev => {
@@ -179,6 +188,13 @@ export function DataManagement() {
 
   const handleBuildingFilterChange = (bid: string) =>
     updateParams({ building: bid, dept: "", page: "0" });
+
+  /* 점수 스케일 감지 (구 50점 vs 신 10점) */
+  const scoreMaxForBand = useMemo(() => {
+    const valid = allRecords.filter(r => r.totalScore > 0);
+    if (!valid.length) return 10;
+    return Math.max(...valid.map(r => r.totalScore)) > 10 ? 50 : 10;
+  }, [allRecords]);
 
   /* 점검자 목록: 현재 조회된 레코드에서 유일값 추출 */
   const inspectorOptions = useMemo(() => {
@@ -530,6 +546,12 @@ export function DataManagement() {
                     <input id="filter-month" type="month" value={filterMonth}
                       onChange={e => updateParams({ month: e.target.value, page: "0" })}
                       className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium" />
+                    {[{ label: "이번 달", value: currentYearMonth }, { label: "지난 달", value: prevYearMonth }].map(p => (
+                      <button key={p.label} onClick={() => updateParams({ month: p.value, page: "0" })}
+                        className={`text-xs px-2.5 py-1.5 rounded-full border transition-colors ${filterMonth === p.value ? "bg-primary-600 text-white border-primary-600" : "bg-white border-surface-300 text-surface-600 hover:bg-surface-50"}`}>
+                        {p.label}
+                      </button>
+                    ))}
                   </>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -703,7 +725,7 @@ export function DataManagement() {
           <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
+                <thead className="bg-surface-50 text-surface-600 border-b border-surface-200 sticky top-0 z-10">
                   <tr>
                     {([
                       { key: "date",           label: "점검일" },
@@ -828,12 +850,18 @@ export function DataManagement() {
                                   value={editForm.scores?.[c.key as keyof RecordDoc["scores"]]}
                                   onChange={e => handleScoreChange(c.key as keyof RecordDoc["scores"], e.target.value)} />
                               </>
-                            ) : record.scores?.[c.key as keyof RecordDoc["scores"]] || 0}
+                            ) : (
+                              <span className={scoreBand(record.scores?.[c.key as keyof RecordDoc["scores"]], 10)}>
+                                {record.scores?.[c.key as keyof RecordDoc["scores"]] || 0}
+                              </span>
+                            )}
                           </td>
                         ))}
 
-                        <td className="py-3 px-4 text-center font-bold text-surface-900 font-mono">
-                          {isEditing ? editForm.totalScore : record.totalScore}
+                        <td className="py-3 px-4 text-center font-mono">
+                          <span className={scoreBand(isEditing ? editForm.totalScore : record.totalScore, scoreMaxForBand)}>
+                            {isEditing ? editForm.totalScore : record.totalScore}
+                          </span>
                         </td>
                         <td className="py-3 px-4 text-center">
                           <StatusBadge status={isEditing ? editForm.status : record.status} />
@@ -950,7 +978,7 @@ export function DataManagement() {
           <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-surface-50 text-surface-600 border-b border-surface-200">
+                <thead className="bg-surface-50 text-surface-600 border-b border-surface-200 sticky top-0 z-10">
                   <tr>
                     <th scope="col"
                       aria-sort={aggSortAttr("departmentName")}

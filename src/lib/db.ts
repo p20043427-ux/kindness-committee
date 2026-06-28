@@ -12,7 +12,8 @@ export function liveQuery<T = any>(
   table: string,
   build: () => PromiseLike<{ data: T[] | null; error: any }>,
   onData: (rows: T[]) => void,
-  onError?: (error: any) => void
+  onError?: (error: any) => void,
+  channelKey?: string
 ): () => void {
   let active = true;
 
@@ -28,8 +29,9 @@ export function liveQuery<T = any>(
 
   run();
 
+  const key = channelKey ?? `live_${table}_${++channelSeq}`;
   const channel = supabase
-    .channel(`live_${table}_${++channelSeq}`)
+    .channel(key)
     .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
       run();
     })

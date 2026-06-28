@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, LabelList,
+  LineChart, Line, ReferenceLine,
 } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/src/components/ui/Card";
 import { supabase } from "@/src/lib/supabase";
@@ -40,6 +41,7 @@ export function YearlyReport() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [records, setRecords] = useState<RecordRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [monthlyChartType, setMonthlyChartType] = useState<"bar" | "line">("bar");
 
   useEffect(() => {
     let mounted = true;
@@ -208,17 +210,25 @@ export function YearlyReport() {
           </h1>
           <p className="text-surface-500 mt-1">연도별 친절점검 성과를 월별·카테고리별·부서별로 분석합니다.</p>
         </div>
-        <div className="flex items-center gap-2 bg-surface-50 border border-surface-200 rounded-xl px-4 py-2">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setSelectedYear(y => y - 1)}
-            className="w-8 h-8 rounded-lg border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold"
-          >◀</button>
-          <span className="font-bold text-surface-900 font-mono text-lg w-16 text-center">{selectedYear}년</span>
-          <button
-            onClick={() => setSelectedYear(y => Math.min(y + 1, currentYear))}
-            disabled={selectedYear >= currentYear}
-            className="w-8 h-8 rounded-lg border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold disabled:opacity-30"
-          >▶</button>
+            onClick={() => window.print()}
+            className="print-hidden px-3 py-2 text-sm border border-surface-300 rounded-lg text-surface-600 hover:bg-surface-50 transition-colors font-medium"
+          >
+            인쇄
+          </button>
+          <div className="flex items-center gap-2 bg-surface-50 border border-surface-200 rounded-xl px-4 py-2">
+            <button
+              onClick={() => setSelectedYear(y => y - 1)}
+              className="w-8 h-8 rounded-lg border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold"
+            >◀</button>
+            <span className="font-bold text-surface-900 font-mono text-lg w-16 text-center">{selectedYear}년</span>
+            <button
+              onClick={() => setSelectedYear(y => Math.min(y + 1, currentYear))}
+              disabled={selectedYear >= currentYear}
+              className="w-8 h-8 rounded-lg border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold disabled:opacity-30"
+            >▶</button>
+          </div>
         </div>
       </div>
 
@@ -278,7 +288,17 @@ export function YearlyReport() {
           <Card className="border-surface-200 shadow-sm">
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <CardTitle>월별 평균 점수 (중점사항별)</CardTitle>
+                <div className="flex items-center gap-3">
+                  <CardTitle>월별 평균 점수 (중점사항별)</CardTitle>
+                  <div className="flex rounded-lg border border-surface-200 overflow-hidden text-xs">
+                    {(["bar", "line"] as const).map(t => (
+                      <button key={t} onClick={() => setMonthlyChartType(t)}
+                        className={`px-3 py-1.5 font-medium transition-colors ${monthlyChartType === t ? "bg-primary-600 text-white" : "bg-white text-surface-600 hover:bg-surface-50"}`}>
+                        {t === "bar" ? "막대" : "추이"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {usedCats.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {usedCats.map(c => (
@@ -297,38 +317,71 @@ export function YearlyReport() {
             </CardHeader>
             <CardContent className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} margin={{ top: 20, right: 10, left: -10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <YAxis domain={[0, scoreMax]} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <Tooltip
-                    cursor={{ fill: "#f8fafc" }}
-                    contentStyle={{ borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "13px" }}
-                    formatter={(value: any, _name: any, props: any) => [
-                      value !== null ? `${value}점` : "데이터 없음",
-                      props.payload.focusName,
-                    ]}
-                    labelFormatter={(label) => {
-                      const d = monthlyData.find(m => m.month === label);
-                      return `${label}${d?.count ? ` (${d.count}건)` : ""}`;
-                    }}
-                  />
-                  <Bar dataKey="avg" maxBarSize={48} radius={[4, 4, 0, 0]}>
-                    <LabelList
-                      dataKey="avg"
-                      position="top"
-                      formatter={(v: any) => (v !== null ? v : "")}
-                      style={{ fontSize: 11, fill: "#64748b", fontWeight: 600 }}
+                {monthlyChartType === "bar" ? (
+                  <BarChart data={monthlyData} margin={{ top: 20, right: 10, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                    <YAxis domain={[0, scoreMax]} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                    <Tooltip
+                      cursor={{ fill: "#f8fafc" }}
+                      contentStyle={{ borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "13px" }}
+                      formatter={(value: any, _name: any, props: any) => [
+                        value !== null ? `${value}점` : "데이터 없음",
+                        props.payload.focusName,
+                      ]}
+                      labelFormatter={(label) => {
+                        const d = monthlyData.find(m => m.month === label);
+                        return `${label}${d?.count ? ` (${d.count}건)` : ""}`;
+                      }}
                     />
-                    {monthlyData.map((d, i) => (
-                      <Cell
-                        key={i}
-                        fill={d.avg !== null ? d.color : "#e2e8f0"}
-                        opacity={d.avg !== null ? 1 : 0.5}
+                    <Bar dataKey="avg" maxBarSize={48} radius={[4, 4, 0, 0]}>
+                      <LabelList
+                        dataKey="avg"
+                        position="top"
+                        formatter={(v: any) => (v !== null ? v : "")}
+                        style={{ fontSize: 11, fill: "#64748b", fontWeight: 600 }}
                       />
-                    ))}
-                  </Bar>
-                </BarChart>
+                      {monthlyData.map((d, i) => (
+                        <Cell
+                          key={i}
+                          fill={d.avg !== null ? d.color : "#e2e8f0"}
+                          opacity={d.avg !== null ? 1 : 0.5}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                ) : (
+                  <LineChart data={monthlyData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                    <YAxis domain={[0, scoreMax]} axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "13px" }}
+                      formatter={(v: any, _: any, p: any) => [v !== null ? `${v}점` : "데이터 없음", p.payload.focusName]}
+                      labelFormatter={(label) => {
+                        const d = monthlyData.find(m => m.month === label);
+                        return `${label}${d?.count ? ` (${d.count}건)` : ""}`;
+                      }}
+                    />
+                    <ReferenceLine
+                      y={Math.round(scoreMax * 0.8)}
+                      stroke="#10b981"
+                      strokeDasharray="4 4"
+                      label={{ value: `기준 ${Math.round(scoreMax * 0.8)}점`, fill: "#10b981", fontSize: 11, position: "right" }}
+                    />
+                    <Line
+                      dataKey="avg"
+                      stroke="#6366f1"
+                      strokeWidth={2.5}
+                      dot={(props: any) => {
+                        if (props.payload.avg === null) return <g key={props.key} />;
+                        return <circle key={props.key} cx={props.cx} cy={props.cy} r={4} fill={props.payload.color} stroke="#fff" strokeWidth={2} />;
+                      }}
+                      activeDot={{ r: 6, fill: "#6366f1" }}
+                      connectNulls={false}
+                    />
+                  </LineChart>
+                )}
               </ResponsiveContainer>
             </CardContent>
           </Card>

@@ -302,10 +302,22 @@ export function Monitoring() {
                             onClick={() => setExpandedDeptId(isExpanded ? null : dept.id)}
                             className={`p-3 rounded-lg border transition-all ${getStatusColor(status)} flex items-center justify-between bg-white bg-opacity-70 backdrop-blur-sm cursor-pointer hover:shadow-sm`}
                           >
-                            <div className="flex flex-col">
+                            <div className="flex flex-col flex-1 min-w-0">
                               <span className="font-semibold text-sm break-keep">{dept.name}</span>
                               {score !== null ? (
-                                <span className="text-xs mt-0.5 opacity-80 font-mono font-medium break-keep">총점: {score}점 / {score > 10 ? 50 : 10}점</span>
+                                <>
+                                  <span className="text-xs mt-0.5 opacity-80 font-mono font-medium break-keep">총점: {score}점 / {score > 10 ? 50 : 10}점</span>
+                                  <div className="mt-1.5 h-1 bg-white/40 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full rounded-full bg-current opacity-70 transition-all duration-500"
+                                      style={{ width: `${Math.min(100, (score / (score > 10 ? 50 : 10)) * 100)}%` }}
+                                      role="progressbar"
+                                      aria-valuenow={score}
+                                      aria-valuemax={score > 10 ? 50 : 10}
+                                      aria-label={`${dept.name} 점수 ${score}점`}
+                                    />
+                                  </div>
+                                </>
                               ) : (
                                 <span className="text-xs mt-0.5 text-primary-500 font-medium break-keep">클릭하여 점검 입력</span>
                               )}

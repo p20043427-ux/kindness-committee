@@ -41,6 +41,7 @@ export function Dashboard() {
   const [events,    setEvents]      = useState<any[]>([]);
   const [isLoading, setIsLoading]   = useState(true);
   const [lastFetch, setLastFetch]   = useState(0);
+  const [kpi, setKpi] = useState<{ curCount: number; curAvg: number | null; prevCount: number; prevAvg: number | null } | null>(null);
 
   const currentYm = new Date().toISOString().slice(0, 7);
   const focusKey      = getFocusForMonth(currentYm);
@@ -48,11 +49,31 @@ export function Dashboard() {
 
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
+    const [curY, curM] = currentYm.split("-").map(Number);
+    const prevM = curM === 1 ? 12 : curM - 1;
+    const prevY = curM === 1 ? curY - 1 : curY;
+    const prevYm = `${prevY}-${String(prevM).padStart(2, "0")}`;
+    const nextM = curM === 12 ? 1 : curM + 1;
+    const nextY = curM === 12 ? curY + 1 : curY;
+    const nextStart = `${nextY}-${String(nextM).padStart(2, "0")}-01T00:00:00`;
     try {
-      const [schedRes, eventRes] = await Promise.all([
+      const [schedRes, eventRes, curRecRes, prevRecRes] = await Promise.all([
         supabase.from("kc_schedules").select("*").eq("month", currentYm),
         supabase.from("kc_events").select("*").eq("month", currentYm),
+        supabase.from("kc_records").select("total_score").gte("date", `${currentYm}-01T00:00:00`).lt("date", nextStart),
+        supabase.from("kc_records").select("total_score").gte("date", `${prevYm}-01T00:00:00`).lt("date", `${currentYm}-01T00:00:00`),
       ]);
+      const calcAvg = (rows: any[]) => {
+        const valid = (rows || []).filter((r: any) => r.total_score > 0);
+        if (!valid.length) return null;
+        return Math.round((valid.reduce((s: number, r: any) => s + r.total_score, 0) / valid.length) * 10) / 10;
+      };
+      setKpi({
+        curCount: (curRecRes.data || []).length,
+        curAvg: calcAvg(curRecRes.data || []),
+        prevCount: (prevRecRes.data || []).length,
+        prevAvg: calcAvg(prevRecRes.data || []),
+      });
 
       const s = (schedRes.data || [])
         .map((x: any) => ({ ...x, inspectors: x.inspectors || [] }))
@@ -98,6 +119,34 @@ export function Dashboard() {
 
   return (
     <div className="animate-in fade-in duration-500 flex-1 flex flex-col items-stretch 2xl:min-h-0">
+
+      {/* KPI 통계 카드 */}
+      {kpi && (
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-white rounded-xl border border-surface-200 shadow-sm px-4 py-3">
+            <p className="text-xs text-surface-500 font-medium">이번 달 점검 완료</p>
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-2xl font-bold text-surface-900 font-mono">{kpi.curCount}<span className="text-sm text-surface-400 ml-1">건</span></p>
+              {kpi.prevCount > 0 && (
+                <span className={`text-xs font-semibold ${kpi.curCount >= kpi.prevCount ? "text-green-600" : "text-amber-600"}`}>
+                  {kpi.curCount >= kpi.prevCount ? "▲" : "▼"} {Math.abs(kpi.curCount - kpi.prevCount)} vs 지난 달
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-surface-200 shadow-sm px-4 py-3">
+            <p className="text-xs text-surface-500 font-medium">이번 달 평균 점수</p>
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-2xl font-bold text-primary-600 font-mono">{kpi.curAvg ?? "—"}<span className="text-sm text-surface-400 ml-1">점</span></p>
+              {kpi.prevAvg !== null && kpi.curAvg !== null && (
+                <span className={`text-xs font-semibold ${kpi.curAvg >= kpi.prevAvg ? "text-green-600" : "text-red-500"}`}>
+                  {kpi.curAvg >= kpi.prevAvg ? "▲" : "▼"} {Math.abs(Math.round((kpi.curAvg - kpi.prevAvg) * 10) / 10)} vs 지난 달
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 이번 달 중점사항 배너 */}
       {focusCategory && (

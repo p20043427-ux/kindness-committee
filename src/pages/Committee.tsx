@@ -17,10 +17,21 @@ export function Committee() {
   const [members, setMembers] = useState<CommitteeMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
+  const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", department: "", role: "", isActive: true });
+
+  const filteredMembers = React.useMemo(() => {
+    if (!searchQuery.trim()) return members;
+    const q = searchQuery.toLowerCase();
+    return members.filter(m =>
+      m.name.toLowerCase().includes(q) ||
+      m.department.toLowerCase().includes(q) ||
+      m.role.toLowerCase().includes(q)
+    );
+  }, [members, searchQuery]);
 
   useEffect(() => {
     const unsubscribe = liveQuery<any>(
@@ -136,17 +147,32 @@ export function Committee() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">위원회 명단 관리</h1>
           <p className="text-surface-500 text-sm mt-1">환경/에너지 관리 위원회 명단을 관리합니다.</p>
         </div>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium shadow-sm transition-colors"
-        >
-          + 위원 추가
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <input
+              type="search"
+              placeholder="이름·소속·역할 검색..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-8 pr-3 py-2 text-sm border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 w-48 bg-white"
+              aria-label="위원 검색"
+            />
+            <svg className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium shadow-sm transition-colors whitespace-nowrap"
+          >
+            + 위원 추가
+          </button>
+        </div>
       </div>
 
       {isFormOpen && (
@@ -228,14 +254,14 @@ export function Committee() {
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-100">
-            {members.length === 0 ? (
+            {filteredMembers.length === 0 ? (
               <tr>
                 <td colSpan={5} className="py-8 text-center text-surface-500">
-                  등록된 위원이 없습니다.
+                  {searchQuery ? `"${searchQuery}"에 해당하는 위원이 없습니다.` : "등록된 위원이 없습니다."}
                 </td>
               </tr>
             ) : (
-              members.map((member) => (
+              filteredMembers.map((member) => (
                 <tr key={member.id} className="hover:bg-surface-50 transition-colors">
                   <td className="py-3 px-4 font-medium text-surface-900">{member.name}</td>
                   <td className="py-3 px-4 text-surface-600">{member.department}</td>
