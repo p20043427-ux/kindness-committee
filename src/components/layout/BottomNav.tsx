@@ -33,7 +33,7 @@ export function BottomNav({ onMoreClick }: BottomNavProps) {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="하단 내비게이션"
     >
-      <div className="flex items-stretch h-14">
+      <div className="flex items-stretch h-16">
         {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -41,7 +41,7 @@ export function BottomNav({ onMoreClick }: BottomNavProps) {
             end={to === "/"}
             className={({ isActive }) =>
               cn(
-                "flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+                "flex-1 flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors min-w-0",
                 isActive
                   ? "text-primary-600"
                   : "text-surface-400 hover:text-surface-600"
@@ -50,8 +50,8 @@ export function BottomNav({ onMoreClick }: BottomNavProps) {
           >
             {({ isActive }) => (
               <>
-                <Icon className={cn("w-5 h-5", isActive && "stroke-[2.2]")} aria-hidden />
-                <span>{label}</span>
+                <Icon className={cn("w-6 h-6 shrink-0", isActive && "stroke-[2.2]")} aria-hidden />
+                <span className="leading-none">{label}</span>
               </>
             )}
           </NavLink>
@@ -60,11 +60,11 @@ export function BottomNav({ onMoreClick }: BottomNavProps) {
         {/* 더보기 — opens sidebar */}
         <button
           onClick={onMoreClick}
-          className="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium text-surface-400 hover:text-surface-600 transition-colors"
+          className="flex-1 flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-surface-400 hover:text-surface-600 transition-colors min-w-0"
           aria-label="전체 메뉴 열기"
         >
-          <Menu className="w-5 h-5" aria-hidden />
-          <span>더보기</span>
+          <Menu className="w-6 h-6 shrink-0" aria-hidden />
+          <span className="leading-none">더보기</span>
         </button>
       </div>
     </nav>

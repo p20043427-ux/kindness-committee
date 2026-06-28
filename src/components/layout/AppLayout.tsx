@@ -16,7 +16,7 @@ export function AppLayout() {
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Topbar onToggleMenu={toggleMenu} />
         <main className="flex-1 overflow-auto">
-          <div className="p-5 pb-20 md:p-7 md:pb-7 max-w-7xl mx-auto w-full">
+          <div className="p-5 pb-24 md:p-7 md:pb-7 max-w-7xl mx-auto w-full">
             <Outlet />
           </div>
         </main>
