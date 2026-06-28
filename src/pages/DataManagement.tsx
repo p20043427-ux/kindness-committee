@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { useSearchParams } from "react-router";
 import { useToast } from "@/src/components/ui/Toast";
 import { supabase } from "@/src/lib/supabase";
-import { liveQuery, rowToRecord, computeStatus, CategoryScores } from "@/src/lib/db";
+import { liveQuery, rowToRecord, scoreToStatus } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
@@ -364,6 +364,12 @@ export function DataManagement() {
         : <ArrowDown className="w-3 h-3 inline ml-1 text-primary-500" aria-hidden />
       : <span className="w-3 inline-block" aria-hidden />;
 
+  /* ── 상태 재계산 (DB의 stale status 무시) ───────────────────────────── */
+  const liveStatus = (record: RecordDoc) => {
+    const cat = record.focusCategory ? categories.find(c => c.key === record.focusCategory) : null;
+    return scoreToStatus(record.totalScore, cat?.max ?? scoreMaxForBand);
+  };
+
   /* ── 편집 ────────────────────────────────────────────────────────────── */
   const startEdit  = (r: RecordDoc) => { setEditingId(r.id); setEditForm({ ...r }); };
   const cancelEdit = () => { setEditingId(null); setEditForm({}); };
@@ -381,11 +387,13 @@ export function DataManagement() {
             sum + (editForm.subScores![`${focusCat.key}_${sub.key}`] ?? 0), 0)
         : (editForm.totalScore ?? 0);
 
+      const newStatus = scoreToStatus(newTotal, focusCat?.max ?? scoreMaxForBand);
       const { error } = await supabase.from("kc_records").update({
         inspector:   editForm.inspector,
         notes:       editForm.notes,
         total_score: newTotal,
         sub_scores:  editForm.subScores ?? null,
+        status:      newStatus,
         updated_at:  new Date().toISOString(),
       }).eq("id", id);
       if (error) throw error;
@@ -646,7 +654,7 @@ export function DataManagement() {
                       <span aria-hidden>·</span>
                       <span>{getBuildingName(record.buildingId)}</span>
                     </div>
-                    <StatusBadge status={record.status} />
+                    <StatusBadge status={liveStatus(record)} />
                   </div>
                   <div className="px-4 py-3 space-y-2">
                     <div className="flex items-center justify-between">
@@ -901,7 +909,7 @@ export function DataManagement() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <StatusBadge status={record.status} />
+                          <StatusBadge status={liveStatus(record)} />
                         </td>
                         <td className="py-3 px-4 whitespace-normal min-w-[220px] max-w-[320px]">
                           {isEditing ? (

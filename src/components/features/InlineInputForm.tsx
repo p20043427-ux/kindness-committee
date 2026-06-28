@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CategoryKey } from "@/src/lib/data";
 import { supabase } from "@/src/lib/supabase";
-import { CategoryScores } from "@/src/lib/db";
+import { CategoryScores, scoreToStatus } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
@@ -25,12 +25,6 @@ interface InlineInputFormProps {
 
 const zeroScores: CategoryScores = { greeting: 0, response: 0, phone: 0, appearance: 0, environment: 0 };
 
-/** 점수만 기준으로 상태 판정 — notes 여부는 상태에 영향 없음 */
-function focusStatus(score: number): '정상' | '주의' | '긴급' {
-  if (score <= 4) return '긴급';
-  if (score < 8)  return '주의';
-  return '정상';
-}
 
 export function InlineInputForm({ buildingId, departmentId, inspectionDate, defaultInspector = "", defaultFocus = "", defaultSubScores, defaultNotes = "", isEditing = false, members = [], onSuccess, onCancel }: InlineInputFormProps) {
   const { user } = useAuth();
@@ -103,7 +97,8 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
     try {
       const deptName = departments.find(d => d.id === departmentId)?.name || "";
       const scores: CategoryScores = { ...zeroScores, [focusCategory]: focusScore };
-      const status = focusStatus(focusScore);
+      const catMax = categories.find(c => c.key === focusCategory)?.max ?? 10;
+      const status = scoreToStatus(focusScore, catMax);
       const inspectionDateIso = inspectionDate + "T09:00:00Z";
       const nowIso = new Date().toISOString();
 
@@ -158,7 +153,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
   };
 
   const focusCat = focusCategory ? categories.find(c => c.key === focusCategory) : null;
-  const statusLabel = focusStatus(focusScore);
+  const statusLabel = scoreToStatus(focusScore, focusCat?.max ?? 10);
   const statusClass =
     statusLabel === "정상" ? "text-green-700 bg-green-50 border-green-200" :
     statusLabel === "주의" ? "text-amber-700 bg-amber-50 border-amber-200" :

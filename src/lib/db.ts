@@ -125,7 +125,19 @@ export interface CategoryScores {
   environment: number;
 }
 
-/** 친절 점검 점수 → 상태 판정 (총 50점 만점 기준). 점수만 기준. */
+/**
+ * 점수 비율 기반 상태 판정 — 만점 대비 80% 이상 정상, 70% 이상 주의, 미만 긴급.
+ * 카테고리 max값이 달라도 일관되게 동작.
+ */
+export function scoreToStatus(score: number, max: number): '정상' | '주의' | '긴급' {
+  if (max <= 0) return '정상';
+  const pct = score / max;
+  if (pct < 0.7) return '긴급';
+  if (pct < 0.8) return '주의';
+  return '정상';
+}
+
+/** @deprecated scoreToStatus 사용 권장. 50점 만점 레거시 판정. */
 export function computeStatus(scores: CategoryScores, _notes?: string): '정상' | '주의' | '긴급' {
   const vals = [scores.greeting, scores.response, scores.phone, scores.appearance, scores.environment];
   const total = vals.reduce((a, b) => a + (b || 0), 0);
