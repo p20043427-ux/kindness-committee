@@ -16,11 +16,13 @@ export function MemberTogglePill({
       type="button"
       aria-pressed={isSelected}
       onClick={onToggle}
-      className={`px-3 py-1.5 text-sm rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-        isSelected
-          ? "bg-primary-100 border-primary-500 text-primary-800 font-medium"
-          : "bg-white border-surface-300 text-surface-600 hover:bg-surface-50"
-      }`}
+      className={
+        "h-7 px-3 text-xs rounded border transition-colors " +
+        "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 " +
+        (isSelected
+          ? "bg-primary-50 border-primary-400 text-primary-800 font-semibold"
+          : "bg-white border-surface-300 text-surface-600 hover:bg-surface-50 hover:border-surface-400")
+      }
     >
       {name}
       {department ? ` (${department})` : ""}

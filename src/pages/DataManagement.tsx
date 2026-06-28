@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { SkeletonTableRows } from "@/src/components/ui/Skeleton";
 import { downloadExcel } from "@/src/lib/excel";
+import { scoreBand } from "@/src/lib/designTokens";
 
 /* ── 날짜 입력 debounce ─────────────────────────────────────────────────── */
 function useDebounce<T>(value: T, delay: number): T {
@@ -49,13 +50,6 @@ export interface RecordDoc {
   createdAt: string;
 }
 
-function scoreBand(val: number | undefined, max: number): string {
-  if (!val || val <= 0) return "text-surface-400";
-  const pct = val / max;
-  if (pct >= 0.8) return "inline-block px-1.5 rounded text-xs bg-green-50 text-green-700 font-bold";
-  if (pct >= 0.5) return "inline-block px-1.5 rounded text-xs bg-amber-50 text-amber-700 font-bold";
-  return "inline-block px-1.5 rounded text-xs bg-red-50 text-red-700 font-bold";
-}
 
 export function DataManagement() {
   const { user } = useAuth();

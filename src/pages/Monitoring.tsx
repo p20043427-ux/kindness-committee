@@ -3,6 +3,9 @@ import { SkeletonBuildingCard } from "@/src/components/ui/Skeleton";
 import { useToast } from "@/src/components/ui/Toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
+import { PageHeader } from "@/src/components/ui/PageHeader";
+import { Button } from "@/src/components/ui/Button";
+import { Select } from "@/src/components/ui/Input";
 import { supabase } from "@/src/lib/supabase";
 import { liveQuery } from "@/src/lib/db";
 import { useAuth } from "@/src/components/auth/AuthProvider";
@@ -10,6 +13,7 @@ import { InlineInputForm } from "@/src/components/features/InlineInputForm";
 import { DatePickerWithData } from "@/src/components/features/DatePickerWithData";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
+import { Download } from "lucide-react";
 
 interface RecordData {
   departmentId: string;
@@ -208,50 +212,52 @@ export function Monitoring() {
     setExpandedDeptId(null);
   };
 
+  const focusBadge = (() => {
+    const fk = getFocusForMonth(selectedDate.slice(0, 7));
+    if (!fk) return undefined;
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-teal-200 bg-teal-50 text-xs text-teal-700">
+        <span aria-hidden>🎯</span>
+        <span className="font-medium">{Number(selectedDate.slice(5, 7))}월 중점사항:</span>
+        <span className="font-semibold">{categoryName(fk)}</span>
+      </span>
+    );
+  })();
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-surface-900 tracking-tight">일자별 점검 현황</h1>
-          <p className="text-surface-500 mt-1">이전 기록 조회 및 해당 일자 점검표를 개별 입력합니다.</p>
-          {(() => {
-            const focusKey = getFocusForMonth(selectedDate.slice(0, 7));
-            const month = Number(selectedDate.slice(5, 7));
-            return focusKey ? (
-              <p className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200 text-sm text-teal-700">
-                <span>🎯</span>
-                <span className="font-medium">{month}월 중점사항:</span>
-                <span className="font-bold">{categoryName(focusKey)}</span>
-              </p>
-            ) : null;
-          })()}
+    <div className="space-y-5 animate-in fade-in duration-500">
+      <PageHeader
+        title="일자별 점검 현황"
+        description="이전 기록 조회 및 해당 일자 점검표를 개별 입력합니다."
+        badge={focusBadge}
+      >
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
+            leftIcon={<Download className="w-3.5 h-3.5" aria-hidden />}
+            onClick={exportToCSV}
+            isLoading={isExporting}
+            className="flex-shrink-0"
+          >
+            CSV
+          </Button>
+          <Select
+            value={globalInspector}
+            onChange={e => setGlobalInspector(e.target.value)}
+            className="flex-shrink-0 w-36"
+            aria-label="점검자 선택"
+          >
+            <option value="">점검자 (선택)</option>
+            {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+          </Select>
+          <DatePickerWithData
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+          />
         </div>
-        <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
-           <button
-             type="button"
-             onClick={exportToCSV}
-             disabled={isExporting}
-             className="flex-shrink-0 px-4 py-2 bg-surface-100 border border-surface-300 text-surface-700 font-medium rounded-lg text-sm hover:bg-surface-200 transition-colors focus:ring-2 focus:ring-primary-500 outline-none flex items-center space-x-1"
-           >
-             <span>⬇️</span>
-             <span>{isExporting ? "추출 중..." : "CSV 내보내기"}</span>
-           </button>
-           <select
-             className="flex-shrink-0 w-32 sm:w-auto px-4 py-2 border border-surface-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 outline-none text-surface-700 font-medium whitespace-nowrap"
-             value={globalInspector}
-             onChange={(e) => setGlobalInspector(e.target.value)}
-           >
-             <option value="">점검자 성명 (선택)</option>
-             {members.map(m => (
-               <option key={m.id} value={m.name}>{m.name}</option>
-             ))}
-           </select>
-           <DatePickerWithData 
-             selectedDate={selectedDate}
-             onDateChange={setSelectedDate}
-           />
-        </div>
-      </div>
+      </PageHeader>
 
       {isLoading || orgLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">

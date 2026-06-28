@@ -9,6 +9,7 @@ import { supabase } from "@/src/lib/supabase";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
 import { CategoryKey } from "@/src/lib/data";
+import { CATEGORY_COLORS, CHART_COLORS } from "@/src/lib/designTokens";
 
 interface RecordRow {
   id: string;
@@ -19,14 +20,8 @@ interface RecordRow {
   focusCategory: string;
 }
 
-const CAT_COLORS: Record<string, string> = {
-  greeting:    "#fbbf24",
-  response:    "#38bdf8",
-  phone:       "#10b981",
-  appearance:  "#f43f5e",
-  environment: "#a78bfa",
-};
-const DEFAULT_COLOR = "#94a3b8";
+const CAT_COLORS = CATEGORY_COLORS;
+const DEFAULT_COLOR = CHART_COLORS.neutral;
 
 function avg(arr: number[]) {
   if (!arr.length) return null;
