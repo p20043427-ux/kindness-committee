@@ -63,6 +63,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       (error) => {
         console.error('Error fetching settings:', error);
         setIsLoading(false);
+        window.dispatchEvent(new CustomEvent('settings-sync-error', { detail: error }));
       }
     );
     return unsubscribe;

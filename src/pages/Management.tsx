@@ -26,40 +26,54 @@ export function Management() {
 
   const handleAddBuilding = async () => {
     if (!newBuildingId.trim() || !newBuildingName.trim()) return;
-    await addBuilding({ id: newBuildingId, name: newBuildingName });
-    setNewBuildingId("");
-    setNewBuildingName("");
+    try {
+      await addBuilding({ id: newBuildingId.trim(), name: newBuildingName.trim() });
+      setNewBuildingId(""); setNewBuildingName("");
+      toast("건물이 추가되었습니다.", "success");
+    } catch { toast("건물 추가 중 오류가 발생했습니다.", "error"); }
   };
 
   const handleSaveBuilding = async (id: string) => {
     if (!editBuildingName.trim()) return;
-    await updateBuilding(id, editBuildingName);
-    setEditBuildingId(null);
+    try {
+      await updateBuilding(id, editBuildingName.trim());
+      setEditBuildingId(null);
+      toast("건물 정보가 수정되었습니다.", "success");
+    } catch { toast("건물 수정 중 오류가 발생했습니다.", "error"); }
   };
 
   const handleDeleteBuilding = async (id: string) => {
-    await deleteBuilding(id);
-    setPendingDeleteBldId(null);
-    toast("건물이 삭제되었습니다.", "success");
+    try {
+      await deleteBuilding(id);
+      setPendingDeleteBldId(null);
+      toast("건물이 삭제되었습니다.", "success");
+    } catch { toast("건물 삭제 중 오류가 발생했습니다.", "error"); }
   };
 
   const handleAddDept = async () => {
     if (!newDeptId.trim() || !newDeptName.trim() || !newDeptBld.trim()) return;
-    await addDepartment({ id: newDeptId, name: newDeptName, buildingId: newDeptBld });
-    setNewDeptId("");
-    setNewDeptName("");
+    try {
+      await addDepartment({ id: newDeptId.trim(), name: newDeptName.trim(), buildingId: newDeptBld });
+      setNewDeptId(""); setNewDeptName("");
+      toast("부서가 추가되었습니다.", "success");
+    } catch { toast("부서 추가 중 오류가 발생했습니다.", "error"); }
   };
 
   const handleSaveDept = async (id: string) => {
     if (!editDeptName.trim() || !editDeptBld.trim()) return;
-    await updateDepartment(id, editDeptName, editDeptBld);
-    setEditDeptId(null);
+    try {
+      await updateDepartment(id, editDeptName.trim(), editDeptBld);
+      setEditDeptId(null);
+      toast("부서 정보가 수정되었습니다.", "success");
+    } catch { toast("부서 수정 중 오류가 발생했습니다.", "error"); }
   };
 
   const handleDeleteDept = async (id: string) => {
-    await deleteDepartment(id);
-    setPendingDeleteDeptId(null);
-    toast("부서가 삭제되었습니다.", "success");
+    try {
+      await deleteDepartment(id);
+      setPendingDeleteDeptId(null);
+      toast("부서가 삭제되었습니다.", "success");
+    } catch { toast("부서 삭제 중 오류가 발생했습니다.", "error"); }
   };
 
   return (
