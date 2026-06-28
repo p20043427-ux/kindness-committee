@@ -524,78 +524,77 @@ export function DataManagement() {
       {activeTab === "raw" ? (
         <div id="panel-raw" role="tabpanel" aria-labelledby="tab-raw" className="space-y-4">
 
-          {/* 필터 바 */}
-          <div className="flex flex-col gap-3 bg-surface-50 p-4 rounded border border-surface-200">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="flex items-center flex-wrap gap-2">
-                <label htmlFor="filter-type" className="sr-only">조회 방식</label>
-                <select id="filter-type" value={filterType}
-                  onChange={e => updateParams({ type: e.target.value, page: "0" })}
-                  className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium">
-                  <option value="month">월간 조회</option>
-                  <option value="range">기간 조회</option>
-                </select>
+          {/* 필터 카드 */}
+          <div className="bg-white border border-surface-200 rounded">
+            {/* 섹션 1: 조회 기간 */}
+            <div className="p-4 flex flex-wrap gap-2 items-center">
+              <label htmlFor="filter-type" className="sr-only">조회 방식</label>
+              <select id="filter-type" value={filterType}
+                onChange={e => updateParams({ type: e.target.value, page: "0" })}
+                className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700 font-medium">
+                <option value="month">월간 조회</option>
+                <option value="range">기간 조회</option>
+              </select>
 
-                {filterType === "month" ? (
-                  <>
-                    <label htmlFor="filter-month" className="sr-only">조회 월</label>
-                    <input id="filter-month" type="month" value={filterMonth}
-                      onChange={e => updateParams({ month: e.target.value, page: "0" })}
-                      className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium" />
+              {filterType === "month" ? (
+                <>
+                  <label htmlFor="filter-month" className="sr-only">조회 월</label>
+                  <input id="filter-month" type="month" value={filterMonth}
+                    onChange={e => updateParams({ month: e.target.value, page: "0" })}
+                    className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-900 font-semibold" />
+                  <div className="flex gap-1.5">
                     {[{ label: "이번 달", value: currentYearMonth }, { label: "지난 달", value: prevYearMonth }].map(p => (
                       <button key={p.label} onClick={() => updateParams({ month: p.value, page: "0" })}
-                        className={`text-xs px-2.5 py-1.5 rounded border transition-colors ${filterMonth === p.value ? "bg-primary-600 text-white border-primary-600" : "bg-white border-surface-300 text-surface-600 hover:bg-surface-50"}`}>
+                        className={`text-xs px-2.5 py-2 rounded border transition-colors ${focusRing} ${filterMonth === p.value ? "bg-primary-600 text-white border-primary-600" : "bg-surface-50 border-surface-300 text-surface-600 hover:bg-surface-100"}`}>
                         {p.label}
                       </button>
                     ))}
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="start-date" className="sr-only">시작일</label>
-                    <input id="start-date" type="date" value={startDateLocal}
-                      onChange={e => setStartDateLocal(e.target.value)}
-                      className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900" />
-                    <span aria-hidden className="text-surface-500">~</span>
-                    <label htmlFor="end-date" className="sr-only">종료일</label>
-                    <input id="end-date" type="date" value={endDateLocal}
-                      onChange={e => setEndDateLocal(e.target.value)}
-                      className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900" />
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label htmlFor="start-date" className="sr-only">시작일</label>
+                  <input id="start-date" type="date" value={startDateLocal}
+                    onChange={e => setStartDateLocal(e.target.value)}
+                    className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-900" />
+                  <span aria-hidden className="text-surface-400 text-xs font-medium">~</span>
+                  <label htmlFor="end-date" className="sr-only">종료일</label>
+                  <input id="end-date" type="date" value={endDateLocal}
+                    onChange={e => setEndDateLocal(e.target.value)}
+                    className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-900" />
+                </div>
+              )}
 
-              {/* 내보내기 */}
-              <div className="flex items-center gap-2">
+              {/* 데스크탑 내보내기 (우측 정렬) */}
+              <div className="hidden sm:flex items-center gap-2 ml-auto">
                 <button onClick={exportRawCSV} disabled={isExporting}
                   aria-label="현재 데이터를 CSV로 내보내기"
-                  className={`flex items-center gap-2 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`}>
-                  <Download className="w-4 h-4" aria-hidden />CSV
+                  className={`flex items-center gap-1.5 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded transition-colors disabled:opacity-50 ${focusRing}`}>
+                  <Download className="w-3.5 h-3.5" aria-hidden />CSV
                 </button>
                 <button onClick={exportRawXLSX} disabled={isExporting}
                   aria-label="현재 데이터를 Excel로 내보내기"
-                  className={`flex items-center gap-2 px-3 py-2 bg-surface-700 hover:bg-surface-800 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-surface-500`}>
-                  {isExporting
-                    ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                    : <FileSpreadsheet className="w-4 h-4" aria-hidden />}
+                  className={`flex items-center gap-1.5 px-3 py-2 bg-surface-700 hover:bg-surface-800 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-surface-500`}>
+                  {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden /> : <FileSpreadsheet className="w-3.5 h-3.5" aria-hidden />}
                   Excel
                 </button>
               </div>
             </div>
 
-            {/* 건물/부서 필터 */}
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-surface-200">
-              <span className="text-xs font-semibold text-surface-500 mr-1" aria-hidden>필터</span>
+            {/* 섹션 2: 필터 */}
+            <div className="border-t border-surface-100 px-4 py-3 flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-surface-400 mr-1" aria-hidden>필터</span>
               <label htmlFor="filter-building" className="sr-only">건물 필터</label>
               <select id="filter-building" value={filterBuildingId}
                 onChange={e => handleBuildingFilterChange(e.target.value)}
-                className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
+                className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700">
                 <option value="">전체 건물</option>
                 {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
               <label htmlFor="filter-dept" className="sr-only">부서 필터</label>
               <select id="filter-dept" value={filterDepartmentId}
                 onChange={e => updateParams({ dept: e.target.value, page: "0" })}
-                className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
+                className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700">
                 <option value="">전체 부서</option>
                 {(filterBuildingId ? departments.filter(d => d.buildingId === filterBuildingId) : departments)
                   .map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -605,7 +604,7 @@ export function DataManagement() {
                   <label htmlFor="filter-inspector" className="sr-only">점검자 필터</label>
                   <select id="filter-inspector" value={filterInspector}
                     onChange={e => updateParams({ inspector: e.target.value, page: "0" })}
-                    className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
+                    className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700">
                     <option value="">전체 점검자</option>
                     {inspectorOptions.map(name => <option key={name} value={name}>{name}</option>)}
                   </select>
@@ -613,13 +612,28 @@ export function DataManagement() {
               )}
               {(filterBuildingId || filterDepartmentId || filterInspector) && (
                 <button onClick={() => updateParams({ building: "", dept: "", inspector: "", page: "0" })}
-                  className={`text-xs text-surface-400 hover:text-surface-700 underline ${focusRing}`}>
-                  필터 초기화
+                  className={`text-xs text-primary-500 hover:text-primary-700 font-medium ${focusRing}`}>
+                  초기화
                 </button>
               )}
-              <span className="ml-auto text-xs text-surface-400 font-mono" aria-live="polite">
+              <span className="ml-auto text-xs text-surface-400 font-mono tabular-nums" aria-live="polite">
                 {displayRecords.length}건{totalPages > 1 ? ` / ${safePage + 1}/${totalPages} 페이지` : ""}
               </span>
+            </div>
+
+            {/* 섹션 3: 모바일 내보내기 */}
+            <div className="sm:hidden border-t border-surface-100 px-4 py-3 flex gap-2">
+              <button onClick={exportRawCSV} disabled={isExporting}
+                aria-label="현재 데이터를 CSV로 내보내기"
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded transition-colors disabled:opacity-50 ${focusRing}`}>
+                <Download className="w-4 h-4" aria-hidden />CSV
+              </button>
+              <button onClick={exportRawXLSX} disabled={isExporting}
+                aria-label="현재 데이터를 Excel로 내보내기"
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 bg-surface-700 hover:bg-surface-800 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-surface-500`}>
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <FileSpreadsheet className="w-4 h-4" aria-hidden />}
+                Excel
+              </button>
             </div>
           </div>
 
@@ -644,7 +658,7 @@ export function DataManagement() {
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-surface-900">{record.departmentName}</span>
                       <span className="text-xl font-bold text-surface-900 font-mono">
-                        {record.totalScore}<span className="text-xs font-normal text-surface-400">/50</span>
+                        {record.totalScore}<span className="text-xs font-normal text-surface-400">/{scoreMaxForBand}</span>
                       </span>
                     </div>
                     {isEditing ? (
@@ -964,7 +978,7 @@ export function DataManagement() {
               </button>
               <button onClick={exportAggregateXLSX} disabled={isExporting}
                 aria-label="집계 데이터를 Excel로 내보내기"
-                className={`flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-500`}>
+                className={`flex items-center gap-2 px-3 py-2 bg-surface-700 hover:bg-surface-800 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-surface-500`}>
                 {isExporting ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <FileSpreadsheet className="w-4 h-4" aria-hidden />}
                 Excel
               </button>
