@@ -6,71 +6,72 @@
   --font-sans: "Pretendard", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  --color-primary-50: var(--color-indigo-50);
-  --color-primary-100: var(--color-indigo-100);
-  --color-primary-200: var(--color-indigo-200);
-  --color-primary-300: var(--color-indigo-300);
-  --color-primary-400: var(--color-indigo-400);
-  --color-primary-500: var(--color-indigo-500);
-  --color-primary-600: var(--color-indigo-600);
-  --color-primary-700: var(--color-indigo-700);
-  --color-primary-800: var(--color-indigo-800);
-  --color-primary-900: var(--color-indigo-900);
+  /* ── Clinical Blue ─────────────────────────────────────────── */
+  --color-primary-50:  #EEF4FD;
+  --color-primary-100: #D3E5F8;
+  --color-primary-200: #A8CCF1;
+  --color-primary-300: #73ABE7;
+  --color-primary-400: #4089D9;
+  --color-primary-500: #1E6DC5;
+  --color-primary-600: #155CA8;
+  --color-primary-700: #0F4888;
+  --color-primary-800: #0A3268;
+  --color-primary-900: #061E44;
 
-  --color-surface-50: var(--color-slate-50);
-  --color-surface-100: var(--color-slate-100);
-  --color-surface-200: var(--color-slate-200);
-  --color-surface-300: var(--color-slate-300);
-  --color-surface-400: var(--color-slate-400);
-  --color-surface-500: var(--color-slate-500);
-  --color-surface-600: var(--color-slate-600);
-  --color-surface-700: var(--color-slate-700);
-  --color-surface-800: var(--color-slate-800);
-  --color-surface-900: var(--color-slate-900);
-  --color-surface-950: var(--color-slate-950);
+  /* ── Cool Blue-Grey Surfaces ───────────────────────────────── */
+  --color-surface-50:  #F4F6F9;
+  --color-surface-100: #E7ECF3;
+  --color-surface-200: #D1D9E6;
+  --color-surface-300: #ADB9CE;
+  --color-surface-400: #7E96B2;
+  --color-surface-500: #5B7492;
+  --color-surface-600: #425874;
+  --color-surface-700: #2D3E56;
+  --color-surface-800: #1C2B3F;
+  --color-surface-900: #0F1B2D;
+  --color-surface-950: #060E1C;
 
-  /* 시맨틱 토큰 */
-  --color-success: var(--color-green-600);
-  --color-success-bg: var(--color-green-50);
-  --color-warning: var(--color-amber-600);
-  --color-warning-bg: var(--color-amber-50);
-  --color-destructive: var(--color-red-600);
-  --color-destructive-bg: var(--color-red-50);
+  /* ── Sidebar Rail ──────────────────────────────────────────── */
+  --color-sidebar-bg:     #091524;
+  --color-sidebar-deep:   #060E18;
+  --color-sidebar-hover:  #102035;
+  --color-sidebar-active: #1558A0;
+  --color-sidebar-border: #182D44;
+  --color-sidebar-text:   #7090B0;
+  --color-sidebar-muted:  #2E4A62;
+
+  /* ── Semantic ──────────────────────────────────────────────── */
+  --color-success:    #15803D;
+  --color-success-bg: #F0FDF4;
+  --color-warning:    #B45309;
+  --color-warning-bg: #FFFBEB;
+  --color-destructive:    #B91C1C;
+  --color-destructive-bg: #FEF2F2;
 }
 
+/* ── Base ────────────────────────────────────────────────────── */
 body {
   @apply bg-surface-50 text-surface-900 antialiased font-sans;
+  font-size: 13.5px;
+  line-height: 1.55;
 }
 
-/* Hide scrollbar for elements with scrollbar-hide class */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-surface-100;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-surface-300 rounded-full;
-}
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-surface-400;
-}
+/* ── Scrollbars ──────────────────────────────────────────────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-surface-300 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-surface-400; }
+
+/* ── Print ───────────────────────────────────────────────────── */
 @media print {
   nav, aside, header, .print-hidden,
   button:not(.print-visible) { display: none !important; }
-  body { background: white !important; font-size: 12px; }
-  .rounded-xl, .rounded-lg { border-radius: 4px !important; }
-  .shadow-sm, .shadow { box-shadow: none !important; }
-  .border { border-color: #e2e8f0 !important; }
-  h1 { border-left: 3px solid #4f46e5 !important; padding-left: 8px !important; font-size: 18px !important; }
+  body { background: white !important; font-size: 11px; }
+  .rounded-xl, .rounded-lg, .rounded { border-radius: 2px !important; }
+  .shadow-sm, .shadow, .shadow-md { box-shadow: none !important; }
+  h1 { border-left: 3px solid #1558A0 !important; padding-left: 8px !important; font-size: 16px !important; }
   @page { margin: 16mm 12mm; }
 }

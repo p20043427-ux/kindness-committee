@@ -8,27 +8,27 @@ export function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-surface-50 text-surface-900 overflow-hidden font-sans">
+    <div className="flex h-screen bg-surface-50 overflow-hidden font-sans">
       <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-      <div className="flex flex-col flex-1 min-w-0">
-        <main className="flex-1 overflow-auto p-4 md:p-8 flex flex-col space-y-6 relative">
-          <Topbar onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
-          <div className="mx-auto w-full max-w-7xl h-full flex flex-col">
+
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <Topbar onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
+        <main className="flex-1 overflow-auto">
+          <div className="p-5 md:p-7 max-w-7xl mx-auto w-full">
             <Outlet />
           </div>
         </main>
       </div>
-      
+
       <GlobalSearch />
 
-      {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+        <div
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
         />
       )}
     </div>
   );
 }
-
