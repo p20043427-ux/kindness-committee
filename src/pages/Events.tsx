@@ -7,6 +7,7 @@ import { PageHeader } from "@/src/components/ui/PageHeader";
 import { DeleteConfirmRow } from "@/src/components/ui/DeleteConfirmRow";
 import { MemberTogglePill } from "@/src/components/ui/MemberTogglePill";
 import { FormActions } from "@/src/components/ui/FormActions";
+import { Calendar } from "lucide-react";
 
 interface CommitteeEvent {
   id: string;
@@ -181,16 +182,16 @@ export function Events() {
       <div className="space-y-6 animate-in fade-in duration-300 max-w-5xl mx-auto">
         <div className="flex justify-between items-center">
           <div className="space-y-2">
-            <div className="h-8 w-40 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+            <div className="h-8 w-40 bg-surface-200 rounded motion-safe:animate-pulse" />
             <div className="h-4 w-64 bg-surface-100 rounded motion-safe:animate-pulse" />
           </div>
-          <div className="h-10 w-28 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+          <div className="h-10 w-28 bg-surface-200 rounded motion-safe:animate-pulse" />
         </div>
-        <div className="bg-white rounded-xl border border-surface-200 overflow-hidden divide-y divide-surface-100">
+        <div className="bg-white rounded border border-surface-200 overflow-hidden divide-y divide-surface-100">
           {[1,2,3].map(i => (
             <div key={i} className="p-6 space-y-3">
               <div className="flex items-center gap-3">
-                <div className="h-6 w-24 bg-surface-100 rounded-md motion-safe:animate-pulse" />
+                <div className="h-6 w-24 bg-surface-100 rounded motion-safe:animate-pulse" />
                 <div className="h-5 w-40 bg-surface-200 rounded motion-safe:animate-pulse" />
               </div>
               <div className="h-4 w-full bg-surface-100 rounded motion-safe:animate-pulse" />
@@ -211,18 +212,18 @@ export function Events() {
           type="month"
           value={filterMonth}
           onChange={(e) => setFilterMonth(e.target.value)}
-          className="border border-surface-300 rounded-lg px-3 py-2 text-surface-900 font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="border border-surface-300 rounded px-3 py-2 text-surface-900 font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500"
         />
         <button
           onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium shadow-sm transition-colors whitespace-nowrap"
+          className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
         >
           + 행사 기록
         </button>
       </PageHeader>
 
       {isFormOpen && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-surface-200">
+        <div className="bg-white p-6 rounded border border-surface-200">
           <h2 className="text-lg font-bold mb-4">{editingId ? "행사 기록 수정" : "새 행사 기록"}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -232,7 +233,7 @@ export function Events() {
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
+                  className="w-full rounded border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                   required
                 />
               </div>
@@ -242,7 +243,7 @@ export function Events() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
+                  className="w-full rounded border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                   placeholder="예: 정기 회의, 캠페인 등"
                   required
                 />
@@ -253,7 +254,7 @@ export function Events() {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500 h-24 resize-none"
+                  className="w-full rounded border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500 h-24 resize-none"
                   placeholder="행사 및 회의 내용을 간략히 기록합니다."
                 />
               </div>
@@ -289,7 +290,7 @@ export function Events() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+      <div className="bg-white rounded border border-surface-200 overflow-hidden">
         {displayEvents.length === 0 ? (
           <div className="p-8 text-center text-surface-500">
             해당 월에 등록된 행사/회의가 없습니다.
@@ -300,8 +301,8 @@ export function Events() {
               <div key={eventRecord.id} className="p-4 sm:p-6 hover:bg-surface-50 transition-colors flex flex-col sm:flex-row justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="px-2.5 py-1 bg-surface-100 text-surface-800 text-xs font-semibold rounded-md border border-surface-200">
-                      📅 {eventRecord.date}
+                    <span className="px-2.5 py-1 bg-surface-100 text-surface-800 text-xs font-semibold rounded border border-surface-200 flex items-center gap-1.5">
+                      <Calendar className="w-3 h-3 shrink-0" aria-hidden /> {eventRecord.date}
                     </span>
                     <h3 className="font-bold text-surface-900 text-lg">
                       {eventRecord.title}
@@ -309,7 +310,7 @@ export function Events() {
                   </div>
 
                   {eventRecord.description && (
-                    <p className="text-sm text-surface-600 whitespace-pre-wrap mb-4 bg-white p-3 rounded-md border border-surface-100">
+                    <p className="text-sm text-surface-600 whitespace-pre-wrap mb-4 bg-white p-3 rounded border border-surface-100">
                       {eventRecord.description}
                     </p>
                   )}
@@ -319,7 +320,7 @@ export function Events() {
                     <div className="flex flex-wrap gap-1.5">
                       {eventRecord.attendees && eventRecord.attendees.length > 0 ? (
                         eventRecord.attendees.map((att, i) => (
-                          <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                          <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-100 text-surface-800 border border-surface-200">
                             {att}
                           </span>
                         ))
@@ -343,13 +344,13 @@ export function Events() {
                     <>
                       <button
                         onClick={() => handleEdit(eventRecord)}
-                        className="px-3 py-1.5 text-surface-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-surface-50 font-medium transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-surface-600 bg-white border border-surface-200 rounded text-sm hover:bg-surface-50 font-medium transition-colors whitespace-nowrap"
                       >
                         수정
                       </button>
                       <button
                         onClick={() => setDeletingId(eventRecord.id)}
-                        className="px-3 py-1.5 text-red-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-red-50 font-medium transition-colors whitespace-nowrap"
+                        className="px-3 py-1.5 text-red-600 bg-white border border-surface-200 rounded text-sm hover:bg-red-50 font-medium transition-colors whitespace-nowrap"
                       >
                         삭제
                       </button>
@@ -363,7 +364,7 @@ export function Events() {
       </div>
 
       {displayEvents.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden mt-8">
+        <div className="bg-white rounded border border-surface-200 overflow-hidden mt-8">
           <div className="bg-surface-50 px-6 py-4 border-b border-surface-200">
             <h2 className="text-lg font-bold text-surface-900">위원별 참여 현황 <span className="text-sm font-normal text-surface-500 ml-2">({filterMonth})</span></h2>
           </div>
@@ -395,7 +396,7 @@ export function Events() {
                         return (
                           <td key={evt.id} className="py-2 px-4 text-center">
                             {attended ? (
-                              <span className="inline-flex w-6 h-6 rounded-full bg-green-100 text-green-600 items-center justify-center font-bold text-xs mx-auto">
+                              <span className="inline-flex w-6 h-6 rounded bg-green-100 text-green-600 items-center justify-center font-bold text-xs mx-auto">
                                 O
                               </span>
                             ) : (

@@ -7,6 +7,7 @@ import { PageHeader } from "@/src/components/ui/PageHeader";
 import { DeleteConfirmRow } from "@/src/components/ui/DeleteConfirmRow";
 import { MemberTogglePill } from "@/src/components/ui/MemberTogglePill";
 import { FormActions } from "@/src/components/ui/FormActions";
+import { Calendar } from "lucide-react";
 
 interface InspectionSchedule {
   id: string;
@@ -182,15 +183,15 @@ export function Schedule() {
       <div className="space-y-6 animate-in fade-in duration-300 max-w-5xl mx-auto">
         <div className="flex justify-between items-center">
           <div className="space-y-2">
-            <div className="h-8 w-40 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+            <div className="h-8 w-40 bg-surface-200 rounded motion-safe:animate-pulse" />
             <div className="h-4 w-64 bg-surface-100 rounded motion-safe:animate-pulse" />
           </div>
-          <div className="h-10 w-28 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+          <div className="h-10 w-28 bg-surface-200 rounded motion-safe:animate-pulse" />
         </div>
-        <div className="bg-white rounded-xl border border-surface-200 overflow-hidden divide-y divide-surface-100">
+        <div className="bg-white rounded border border-surface-200 overflow-hidden divide-y divide-surface-100">
           {[1,2,3].map(i => (
             <div key={i} className="p-6 flex items-center gap-4">
-              <div className="h-14 w-20 bg-surface-100 rounded-lg motion-safe:animate-pulse" />
+              <div className="h-14 w-20 bg-surface-100 rounded motion-safe:animate-pulse" />
               <div className="flex-1 space-y-2">
                 <div className="h-5 w-32 bg-surface-200 rounded motion-safe:animate-pulse" />
                 <div className="h-4 w-48 bg-surface-100 rounded motion-safe:animate-pulse" />
@@ -212,18 +213,18 @@ export function Schedule() {
           type="month"
           value={filterMonth}
           onChange={(e) => setFilterMonth(e.target.value)}
-          className="border border-surface-300 rounded-lg px-3 py-2 text-surface-900 font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="border border-surface-300 rounded px-3 py-2 text-surface-900 font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500"
         />
         <button
           onClick={() => setIsFormOpen(true)}
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium shadow-sm transition-colors whitespace-nowrap"
+          className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 font-medium transition-colors whitespace-nowrap"
         >
           + 스케줄 추가
         </button>
       </PageHeader>
 
       {isFormOpen && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-surface-200">
+        <div className="bg-white p-6 rounded border border-surface-200">
           <h2 className="text-lg font-bold mb-4">{editingId ? "스케줄 수정" : "새 스케줄 추가"}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -233,7 +234,7 @@ export function Schedule() {
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
+                  className="w-full rounded border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                   required
                 />
               </div>
@@ -242,7 +243,7 @@ export function Schedule() {
                 <select
                   value={formData.turn}
                   onChange={(e) => setFormData({ ...formData, turn: Number(e.target.value) as 1 | 2 })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
+                  className="w-full rounded border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                 >
                   <option value={1}>1차 점검</option>
                   <option value={2}>2차 점검</option>
@@ -273,7 +274,7 @@ export function Schedule() {
                   type="text"
                   value={formData.note}
                   onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                  className="w-full rounded-md border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
+                  className="w-full rounded border border-surface-300 px-3 py-2 text-surface-900 focus:border-primary-500"
                   placeholder="예: 시간 변동 등 안내사항"
                 />
               </div>
@@ -290,7 +291,7 @@ export function Schedule() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+      <div className="bg-white rounded border border-surface-200 overflow-hidden">
         {displaySchedules.length === 0 ? (
           <div className="p-8 text-center text-surface-500">
             해당 월에 등록된 점검 스케줄이 없습니다.
@@ -300,13 +301,13 @@ export function Schedule() {
             {displaySchedules.map(sched => (
               <div key={sched.id} className="p-4 sm:p-6 hover:bg-surface-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start sm:items-center gap-4">
-                  <div className="bg-primary-50 text-primary-700 font-bold px-4 py-2 rounded-lg text-center min-w-[80px]">
+                  <div className="bg-primary-50 text-primary-700 font-bold px-4 py-2 rounded text-center min-w-[80px]">
                     <div className="text-xs uppercase opacity-80 mb-0.5">{sched.month}</div>
                     <div className="text-lg">{sched.turn}차</div>
                   </div>
                   <div>
                     <h3 className="font-bold text-surface-900 text-lg sm:text-xl flex items-center gap-2">
-                      📅 {sched.date}
+                      <Calendar className="w-4 h-4 text-surface-400 shrink-0" aria-hidden /> {sched.date}
                     </h3>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-surface-600">
                       <span className="font-medium">점검자:</span>
@@ -322,7 +323,7 @@ export function Schedule() {
                     </div>
                     {sched.note && (
                       <p className="mt-2 text-sm text-surface-500 flex items-center gap-1">
-                        <span className="opacity-70">💬</span> {sched.note}
+                        {sched.note}
                       </p>
                     )}
                   </div>
@@ -337,13 +338,13 @@ export function Schedule() {
                     <>
                       <button
                         onClick={() => handleEdit(sched)}
-                        className="px-3 py-1.5 text-surface-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-surface-50 font-medium transition-colors"
+                        className="px-3 py-1.5 text-surface-600 bg-white border border-surface-200 rounded text-sm hover:bg-surface-50 font-medium transition-colors"
                       >
                         수정
                       </button>
                       <button
                         onClick={() => setDeletingId(sched.id)}
-                        className="px-3 py-1.5 text-red-600 bg-white border border-surface-200 rounded-md text-sm hover:bg-red-50 font-medium transition-colors"
+                        className="px-3 py-1.5 text-red-600 bg-white border border-surface-200 rounded text-sm hover:bg-red-50 font-medium transition-colors"
                       >
                         삭제
                       </button>

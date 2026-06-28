@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useToast } from "@/src/components/ui/Toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
+import { PageHeader } from "@/src/components/ui/PageHeader";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings, MonthlyFocusMap } from "@/src/components/layout/SettingsProvider";
 import { InspectionCategory, CategoryKey, MAX_TOTAL_SCORE } from "@/src/lib/data";
 import { supabase } from "@/src/lib/supabase";
+import { Building2, ClipboardList, AlertTriangle } from "lucide-react";
 
 export function Admin() {
   const { buildings, departments } = useOrganization();
@@ -127,22 +129,22 @@ export function Admin() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-surface-900 tracking-tight">시스템 설정</h1>
-        <p className="text-surface-500 mt-1">마스터 데이터 관리 및 시스템 구성을 변경합니다.</p>
-      </div>
+      <PageHeader
+        title="시스템 설정"
+        description="마스터 데이터 관리 및 시스템 구성을 변경합니다."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>🏢</span> <span>건물 마스터 관리</span>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-surface-500" aria-hidden /> 건물 마스터 관리
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {buildings.map(b => (
-                <div key={b.id} className="flex items-center justify-between p-3 border border-surface-200 rounded-lg bg-surface-50">
+                <div key={b.id} className="flex items-center justify-between p-3 border border-surface-200 rounded bg-surface-50">
                   <div>
                     <p className="font-semibold text-sm">{b.name} ({b.id})</p>
                     <p className="text-xs text-surface-500 mt-1">
@@ -158,8 +160,8 @@ export function Admin() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <span>📋</span> <span>점검 항목 설정</span>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-surface-500" aria-hidden /> 점검 항목 설정
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -175,7 +177,7 @@ export function Admin() {
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {categories.map(c => (
-                    <span key={c.key} className="text-xs px-2 py-1 rounded-md bg-primary-50 text-primary-700 font-medium">
+                    <span key={c.key} className="text-xs px-2 py-1 rounded bg-primary-50 text-primary-700 font-medium">
                       {c.name} <span className="text-primary-400">{c.max}점</span>
                     </span>
                   ))}
@@ -216,21 +218,21 @@ export function Admin() {
             <CardContent>
               <div className="space-y-3">
                 {catDraft.map((c, idx) => (
-                  <div key={c.key} className="grid grid-cols-1 sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,2fr)_3.5rem] gap-2 items-center p-3 border border-surface-200 rounded-lg bg-surface-50">
+                  <div key={c.key} className="grid grid-cols-1 sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,2fr)_3.5rem] gap-2 items-center p-3 border border-surface-200 rounded bg-surface-50">
                     <span className="text-xs font-bold text-surface-400 font-mono">{idx + 1}</span>
                     <input
                       type="text"
                       value={c.name}
                       onChange={e => setCatField(c.key, "name", e.target.value)}
                       placeholder="카테고리 이름"
-                      className="rounded-md border border-surface-300 px-3 py-2 text-sm font-semibold focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white"
+                      className="rounded border border-surface-300 px-3 py-2 text-sm font-semibold focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white"
                     />
                     <input
                       type="text"
                       value={c.details}
                       onChange={e => setCatField(c.key, "details", e.target.value)}
                       placeholder="세부 평가 항목 (예: 첫인사 · 끝인사 · 먼저인사)"
-                      className="rounded-md border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white"
+                      className="rounded border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white"
                     />
                     <span className="text-xs text-surface-500 font-mono text-center">{c.max}점</span>
                   </div>
@@ -239,14 +241,14 @@ export function Admin() {
                   <button
                     onClick={() => setEditSection(null)}
                     disabled={isSaving}
-                    className="px-4 py-2 rounded-lg border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors"
+                    className="px-4 py-2 rounded border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors"
                   >
                     취소
                   </button>
                   <button
                     onClick={handleSaveCategories}
                     disabled={isSaving}
-                    className="px-4 py-2 rounded-lg bg-surface-900 text-white font-medium text-sm hover:bg-surface-800 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 rounded bg-surface-900 text-white font-medium text-sm hover:bg-surface-800 transition-colors disabled:opacity-50"
                   >
                     {isSaving ? "저장 중..." : "저장"}
                   </button>
@@ -269,14 +271,14 @@ export function Admin() {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setFocusYear(y => y - 1)}
-                    className="w-8 h-8 rounded-lg border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold"
+                    className="w-8 h-8 rounded border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold"
                   >
                     ◀
                   </button>
                   <span className="font-bold text-surface-900 font-mono">{focusYear}년</span>
                   <button
                     onClick={() => setFocusYear(y => y + 1)}
-                    className="w-8 h-8 rounded-lg border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold"
+                    className="w-8 h-8 rounded border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold"
                   >
                     ▶
                   </button>
@@ -290,7 +292,7 @@ export function Admin() {
                   return (
                     <div
                       key={m.ym}
-                      className={`flex items-center justify-between p-3 border rounded-lg ${
+                      className={`flex items-center justify-between p-3 border rounded ${
                         isCurrent ? "border-teal-300 bg-teal-50" : "border-surface-200 bg-surface-50"
                       }`}
                     >
@@ -301,7 +303,7 @@ export function Admin() {
                       <select
                         value={focusDraft[m.ym] || ""}
                         onChange={e => setMonthFocus(m.ym, e.target.value)}
-                        className="rounded-md border border-surface-300 px-2 py-1.5 text-sm bg-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none max-w-[60%]"
+                        className="rounded border border-surface-300 px-2 py-1.5 text-sm bg-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none max-w-[60%]"
                       >
                         <option value="">미지정</option>
                         {categories.map(c => (
@@ -316,14 +318,14 @@ export function Admin() {
                 <button
                   onClick={() => setEditSection(null)}
                   disabled={isSaving}
-                  className="px-4 py-2 rounded-lg border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors"
+                  className="px-4 py-2 rounded border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleSaveFocus}
                   disabled={isSaving}
-                  className="px-4 py-2 rounded-lg bg-surface-900 text-white font-medium text-sm hover:bg-surface-800 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 rounded bg-surface-900 text-white font-medium text-sm hover:bg-surface-800 transition-colors disabled:opacity-50"
                 >
                   {isSaving ? "저장 중..." : "저장"}
                 </button>
@@ -334,8 +336,8 @@ export function Admin() {
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-red-600">
-              <span>⚠️</span> <span>보안 및 고급 설정</span>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-4 h-4" aria-hidden /> 보안 및 고급 설정
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -347,7 +349,7 @@ export function Admin() {
               <button
                 onClick={exportAllData}
                 disabled={isExporting}
-                className="px-4 py-2 bg-surface-100 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-200 disabled:opacity-50"
+                className="px-4 py-2 bg-surface-100 text-surface-700 text-sm font-medium rounded hover:bg-surface-200 disabled:opacity-50"
               >
                 {isExporting ? "추출 중..." : "내보내기"}
               </button>
@@ -367,7 +369,7 @@ export function Admin() {
                 <p className="font-medium text-sm text-red-600">시스템 초기화</p>
                 <p className="text-xs text-surface-500 mt-1">모든 설정과 데이터를 초기 상태로 되돌립니다. (복구 불가)</p>
               </div>
-              <button className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors">
+              <button className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded transition-colors">
                 초기화 진행
               </button>
             </div>

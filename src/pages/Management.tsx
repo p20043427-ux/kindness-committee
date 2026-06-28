@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
+import { PageHeader } from "@/src/components/ui/PageHeader";
 import { useOrganization, Building, Department } from "@/src/components/layout/OrganizationProvider";
 import { useToast } from "@/src/components/ui/Toast";
 
@@ -78,10 +79,10 @@ export function Management() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-surface-900 tracking-tight">건물 / 부서 코드 관리</h1>
-        <p className="text-surface-500 mt-1">시스템에서 사용되는 건물과 부서 기초 코드를 관리합니다.</p>
-      </div>
+      <PageHeader
+        title="건물 / 부서 코드 관리"
+        description="시스템에서 사용되는 건물과 부서 기초 코드를 관리합니다."
+      />
 
       <div className="flex space-x-2 border-b border-surface-200">
         <button
@@ -113,25 +114,25 @@ export function Management() {
                 <label className="text-xs font-semibold text-surface-500 uppercase">건물 코드 (ID)</label>
                 <input 
                   value={newBuildingId} onChange={(e) => setNewBuildingId(e.target.value)}
-                  placeholder="예: B04" className="w-full sm:w-32 px-3 py-2 border border-surface-300 rounded-md text-sm"
+                  placeholder="예: B04" className="w-full sm:w-32 px-3 py-2 border border-surface-300 rounded text-sm"
                 />
               </div>
               <div className="flex flex-col space-y-1 w-full sm:w-auto flex-1">
                 <label className="text-xs font-semibold text-surface-500 uppercase">건물명</label>
                 <input 
                   value={newBuildingName} onChange={(e) => setNewBuildingName(e.target.value)}
-                  placeholder="예: 암센터" className="w-full px-3 py-2 border border-surface-300 rounded-md text-sm"
+                  placeholder="예: 암센터" className="w-full px-3 py-2 border border-surface-300 rounded text-sm"
                 />
               </div>
               <button 
                 onClick={handleAddBuilding}
-                className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white font-medium rounded-md text-sm hover:bg-primary-700 transition"
+                className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white font-medium rounded text-sm hover:bg-primary-700 transition"
               >
                 + 추가
               </button>
             </div>
 
-            <div className="border border-surface-200 rounded-lg overflow-hidden">
+            <div className="border border-surface-200 rounded overflow-hidden">
               <table className="w-full text-sm text-left">
                 <thead className="bg-surface-50 text-surface-500 border-b border-surface-200 uppercase text-xs font-semibold">
                   <tr>
@@ -197,14 +198,14 @@ export function Management() {
                 <label className="text-xs font-semibold text-surface-500 uppercase">부서 코드 (ID)</label>
                 <input 
                   value={newDeptId} onChange={(e) => setNewDeptId(e.target.value)}
-                  placeholder="예: D99" className="w-full sm:w-28 px-3 py-2 border border-surface-300 rounded-md text-sm"
+                  placeholder="예: D99" className="w-full sm:w-28 px-3 py-2 border border-surface-300 rounded text-sm"
                 />
               </div>
               <div className="flex flex-col space-y-1 w-full sm:w-auto">
                 <label className="text-xs font-semibold text-surface-500 uppercase">소속 건물</label>
                 <select 
                   value={newDeptBld} onChange={(e) => setNewDeptBld(e.target.value)}
-                  className="w-full sm:w-32 px-3 py-2 border border-surface-300 rounded-md text-sm bg-white"
+                  className="w-full sm:w-32 px-3 py-2 border border-surface-300 rounded text-sm bg-white"
                 >
                   <option value="">선택</option>
                   {buildings.map(b => (
@@ -216,20 +217,20 @@ export function Management() {
                 <label className="text-xs font-semibold text-surface-500 uppercase">부서명</label>
                 <input 
                   value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)}
-                  placeholder="예: 새로운 부서" className="w-full px-3 py-2 border border-surface-300 rounded-md text-sm"
+                  placeholder="예: 새로운 부서" className="w-full px-3 py-2 border border-surface-300 rounded text-sm"
                 />
               </div>
               <button 
                 onClick={handleAddDept}
-                className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white font-medium rounded-md text-sm hover:bg-primary-700 transition"
+                className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white font-medium rounded text-sm hover:bg-primary-700 transition"
               >
                 + 추가
               </button>
             </div>
 
-            <div className="border border-surface-200 rounded-lg overflow-hidden h-[500px] overflow-y-auto">
+            <div className="border border-surface-200 rounded overflow-hidden h-[500px] overflow-y-auto">
               <table className="w-full text-sm text-left relative">
-                <thead className="bg-surface-50 text-surface-500 border-b border-surface-200 uppercase text-xs font-semibold sticky top-0 z-10 shadow-sm">
+                <thead className="bg-surface-50 text-surface-500 border-b border-surface-200 uppercase text-xs font-semibold sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 w-28">부서 코드</th>
                     <th className="px-4 py-3 w-32">소속 건물</th>
