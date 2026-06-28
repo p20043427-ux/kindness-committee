@@ -4,18 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Ca
 import { supabase } from "@/src/lib/supabase";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
-import { CalendarDays, Users, RefreshCw } from "lucide-react";
+import {
+  CalendarDays, Users, RefreshCw, Target,
+  ClipboardList, Database, Calendar, UserCheck,
+  Megaphone, Building2, BarChart3, Settings,
+} from "lucide-react";
 import { Skeleton } from "@/src/components/ui/Skeleton";
 
 const mobileNavItems = [
-  { to: "/monitoring",      icon: "📅", label: "점검 조회/입력",  color: "bg-blue-100 text-blue-700" },
-  { to: "/data-management", icon: "📋", label: "점검 데이터",     color: "bg-purple-100 text-purple-700" },
-  { to: "/schedule",        icon: "🗓️", label: "점검 스케줄",     color: "bg-green-100 text-green-700" },
-  { to: "/committee",       icon: "👥", label: "명단 관리",       color: "bg-orange-100 text-orange-700" },
-  { to: "/events",          icon: "🤝", label: "월별 행사",       color: "bg-pink-100 text-pink-700" },
-  { to: "/management",      icon: "🏢", label: "코드 관리",       color: "bg-indigo-100 text-indigo-700" },
-  { to: "/yearly-report",   icon: "📈", label: "연간 리포트",     color: "bg-teal-100 text-teal-700" },
-  { to: "/admin",           icon: "⚙️", label: "시스템 설정",     color: "bg-slate-100 text-slate-700" },
+  { to: "/monitoring",      Icon: ClipboardList, label: "점검 조회/입력" },
+  { to: "/data-management", Icon: Database,       label: "점검 데이터" },
+  { to: "/schedule",        Icon: Calendar,       label: "점검 스케줄" },
+  { to: "/committee",       Icon: UserCheck,      label: "명단 관리" },
+  { to: "/events",          Icon: Megaphone,      label: "월별 행사" },
+  { to: "/management",      Icon: Building2,      label: "코드 관리" },
+  { to: "/yearly-report",   Icon: BarChart3,      label: "연간 리포트" },
+  { to: "/admin",           Icon: Settings,       label: "시스템 설정" },
 ];
 
 function ScheduleSkeleton() {
@@ -25,7 +29,7 @@ function ScheduleSkeleton() {
         <div key={i} className="flex flex-col border-b border-surface-50 pb-3">
           <div className="flex justify-between items-center gap-2">
             <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded" />
           </div>
           <Skeleton className="h-4 w-48 mt-2 ml-7" />
         </div>
@@ -123,24 +127,24 @@ export function Dashboard() {
       {/* KPI 통계 카드 */}
       {kpi && (
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-white rounded-xl border border-surface-200 shadow-sm px-4 py-3">
-            <p className="text-xs text-surface-500 font-medium">이번 달 점검 완료</p>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-2xl font-bold text-surface-900 font-mono">{kpi.curCount}<span className="text-sm text-surface-400 ml-1">건</span></p>
+          <div className="bg-white rounded border border-surface-200 px-4 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-surface-400">이번 달 점검 완료</p>
+            <div className="flex items-baseline gap-2 mt-2">
+              <p className="text-2xl font-bold text-surface-900 font-mono tabular-nums">{kpi.curCount}<span className="text-sm text-surface-400 ml-1 font-sans font-normal">건</span></p>
               {kpi.prevCount > 0 && (
                 <span className={`text-xs font-semibold ${kpi.curCount >= kpi.prevCount ? "text-green-600" : "text-amber-600"}`}>
-                  {kpi.curCount >= kpi.prevCount ? "▲" : "▼"} {Math.abs(kpi.curCount - kpi.prevCount)} vs 지난 달
+                  {kpi.curCount >= kpi.prevCount ? "▲" : "▼"} {Math.abs(kpi.curCount - kpi.prevCount)} vs 지난달
                 </span>
               )}
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-surface-200 shadow-sm px-4 py-3">
-            <p className="text-xs text-surface-500 font-medium">이번 달 평균 점수</p>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-2xl font-bold text-primary-600 font-mono">{kpi.curAvg ?? "—"}<span className="text-sm text-surface-400 ml-1">점</span></p>
+          <div className="bg-white rounded border border-surface-200 px-4 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-surface-400">이번 달 평균 점수</p>
+            <div className="flex items-baseline gap-2 mt-2">
+              <p className="text-2xl font-bold text-primary-600 font-mono tabular-nums">{kpi.curAvg ?? "—"}<span className="text-sm text-surface-400 ml-1 font-sans font-normal">점</span></p>
               {kpi.prevAvg !== null && kpi.curAvg !== null && (
                 <span className={`text-xs font-semibold ${kpi.curAvg >= kpi.prevAvg ? "text-green-600" : "text-red-500"}`}>
-                  {kpi.curAvg >= kpi.prevAvg ? "▲" : "▼"} {Math.abs(Math.round((kpi.curAvg - kpi.prevAvg) * 10) / 10)} vs 지난 달
+                  {kpi.curAvg >= kpi.prevAvg ? "▲" : "▼"} {Math.abs(Math.round((kpi.curAvg - kpi.prevAvg) * 10) / 10)} vs 지난달
                 </span>
               )}
             </div>
@@ -150,8 +154,10 @@ export function Dashboard() {
 
       {/* 이번 달 중점사항 배너 */}
       {focusCategory && (
-        <div className="mb-4 flex items-center gap-3 p-4 rounded-xl bg-teal-50 border border-teal-200">
-          <span className="text-2xl" aria-hidden>🎯</span>
+        <div className="mb-4 flex items-center gap-3 p-3 rounded border border-teal-200 bg-teal-50">
+          <div className="w-8 h-8 rounded bg-teal-100 flex items-center justify-center shrink-0">
+            <Target className="w-4 h-4 text-teal-700" aria-hidden />
+          </div>
           <div>
             <p className="text-sm font-bold text-teal-800">
               {new Date().getMonth() + 1}월 중점사항: {focusCategory.name}
@@ -163,15 +169,15 @@ export function Dashboard() {
 
       {/* 모바일 메뉴 */}
       <div className="lg:hidden flex flex-col gap-4">
-        <h2 className="text-xl font-bold text-surface-900 border-l-4 border-primary-500 pl-3">메뉴</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <h2 className="text-base font-bold text-surface-700 uppercase tracking-widest">메뉴</h2>
+        <div className="grid grid-cols-2 gap-3">
           {mobileNavItems.map((item) => (
             <Link key={item.to} to={item.to}
-              className="bg-white rounded-xl shadow-sm border border-surface-200 p-4 flex flex-col items-center justify-center gap-3 hover:bg-surface-50 active:scale-95 transition-all">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${item.color}`}>
-                {item.icon}
+              className="bg-white rounded border border-surface-200 p-4 flex flex-col items-center justify-center gap-2.5 hover:bg-surface-50 active:scale-95 transition-all">
+              <div className="w-10 h-10 rounded bg-primary-50 flex items-center justify-center">
+                <item.Icon className="w-5 h-5 text-primary-600" aria-hidden />
               </div>
-              <span className="text-sm font-bold text-surface-700 text-center">{item.label}</span>
+              <span className="text-xs font-semibold text-surface-700 text-center">{item.label}</span>
             </Link>
           ))}
         </div>
@@ -181,16 +187,16 @@ export function Dashboard() {
       <div className="hidden lg:grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">
 
         {/* 행사 일정 */}
-        <Card className="border-surface-200 shadow-sm">
+        <Card className="border-surface-200">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-pink-500" aria-hidden />
+                <Users className="w-4 h-4 text-surface-500" aria-hidden />
                 이번 달 행사 일정
               </CardTitle>
               <button onClick={fetchDashboardData} disabled={isLoading}
                 aria-label="새로고침"
-                className="p-1.5 rounded-lg text-surface-400 hover:text-surface-700 hover:bg-surface-100 transition-colors disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                className="p-1.5 rounded text-surface-400 hover:text-surface-700 hover:bg-surface-100 transition-colors disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-primary-500">
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} aria-hidden />
               </button>
             </div>
@@ -203,12 +209,13 @@ export function Dashboard() {
                 ) : events.map((e, i) => (
                   <div key={i} className="flex flex-col border-b border-surface-50 pb-3 last:border-0 hover:bg-surface-50 p-2 rounded transition-colors">
                     <div className="flex justify-between items-center text-sm gap-2">
-                      <span className="font-bold text-surface-800 text-base flex items-center gap-2">
-                        <span aria-hidden>🤝</span> {e.title}
+                      <span className="font-bold text-surface-800 text-sm flex items-center gap-2">
+                        <Users className="w-3.5 h-3.5 text-surface-400 shrink-0" aria-hidden />
+                        {e.title}
                       </span>
-                      <span className="shrink-0 text-sm font-medium text-surface-600 bg-surface-100 px-3 py-1 rounded-full font-mono">{e.date}</span>
+                      <span className="shrink-0 text-xs font-medium text-surface-600 bg-surface-100 px-2.5 py-1 rounded font-mono tabular-nums">{e.date}</span>
                     </div>
-                    <div className="text-sm text-surface-500 mt-2 ml-7">
+                    <div className="text-xs text-surface-500 mt-1.5 ml-[22px]">
                       <span className="font-medium mr-1">참석자:</span>
                       {e.attendees?.length > 0 ? e.attendees.join(", ") : "기록 없음"}
                     </div>
@@ -220,10 +227,10 @@ export function Dashboard() {
         </Card>
 
         {/* 점검 스케줄 */}
-        <Card className="border-surface-200 shadow-sm">
+        <Card className="border-surface-200">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-green-500" aria-hidden />
+              <CalendarDays className="w-4 h-4 text-surface-500" aria-hidden />
               이번 달 점검 스케줄
             </CardTitle>
           </CardHeader>
@@ -235,12 +242,13 @@ export function Dashboard() {
                 ) : schedules.map((s, i) => (
                   <div key={i} className="flex flex-col border-b border-surface-50 pb-3 last:border-0 hover:bg-surface-50 p-2 rounded transition-colors">
                     <div className="flex justify-between items-center text-sm gap-2">
-                      <span className="font-bold text-surface-800 text-base flex items-center gap-2">
-                        <span aria-hidden>🗓️</span> {s.turn}차 점검
+                      <span className="font-bold text-surface-800 text-sm flex items-center gap-2">
+                        <CalendarDays className="w-3.5 h-3.5 text-surface-400 shrink-0" aria-hidden />
+                        {s.turn}차 점검
                       </span>
-                      <span className="text-sm font-medium text-surface-600 bg-surface-100 px-3 py-1 rounded-full font-mono">{s.date}</span>
+                      <span className="text-xs font-medium text-surface-600 bg-surface-100 px-2.5 py-1 rounded font-mono tabular-nums">{s.date}</span>
                     </div>
-                    <div className="text-sm text-surface-500 mt-2 ml-7">
+                    <div className="text-xs text-surface-500 mt-1.5 ml-[22px]">
                       <span className="font-medium mr-1">점검자:</span>
                       {s.inspectors?.length > 0 ? s.inspectors.join(", ") : "미정"}
                     </div>

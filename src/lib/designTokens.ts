@@ -3,23 +3,33 @@
  * outside the CSS @theme block (chart fills, score helpers).
  * ────────────────────────────────────────────────────────────── */
 
-/** Category fill colors — used in Recharts Bar/Line and legend. */
+/** Clinical muted palette for category bar/line fills.
+ *  Dark enough for white text (WCAG AA), desaturated enough for HIS. */
 export const CATEGORY_COLORS: Record<string, string> = {
-  greeting:    "#FBBF24",
-  response:    "#38BDF8",
-  phone:       "#10B981",
-  appearance:  "#F43F5E",
-  environment: "#A78BFA",
+  greeting:    "#A86800",  // muted amber-gold
+  response:    "#1A6AAE",  // clinical steel-blue
+  phone:       "#167A55",  // clinical forest-green
+  appearance:  "#B83030",  // clinical crimson
+  environment: "#6040A0",  // muted indigo-purple
 };
 
-/** Named chart palette for multi-series charts. */
+/** Sequential clinical-blue scale for building/group comparisons. */
+export const BUILDING_COLORS = [
+  "#0F4888",  // deepest
+  "#155CA8",  // primary clinical blue
+  "#1E6DC5",
+  "#2A83D8",
+  "#3A9AE5",
+] as const;
+
+/** Named chart palette for single-series and reference elements. */
 export const CHART_COLORS = {
-  primary:   "#1E6DC5",
-  secondary: "#10B981",
-  warning:   "#F59E0B",
-  danger:    "#EF4444",
-  neutral:   "#94A3B8",
-  purple:    "#8B5CF6",
+  primary:   "#1558A0",  // clinical blue — line charts, single series
+  secondary: "#16805A",  // clinical green — reference line
+  warning:   "#B45309",  // muted amber — attention
+  danger:    "#B83030",  // clinical crimson — critical
+  neutral:   "#8899B0",  // cool blue-grey — no-data / unassigned
+  purple:    "#6040A0",  // muted purple
 } as const;
 
 /** Returns a Tailwind className string encoding the score severity.
