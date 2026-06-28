@@ -50,6 +50,7 @@ export interface RecordDoc {
   status: string;
   userId: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 
@@ -97,9 +98,8 @@ export function DataManagement() {
   }, [startDate, endDate, filterType]);
 
   /* ── 로컬 상태 ─────────────────────────────────────────────────────── */
-  const [allRecords,      setAllRecords]      = useState<RecordDoc[]>([]);
-  const [isLoading,       setIsLoading]       = useState(true);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [allRecords,          setAllRecords]          = useState<RecordDoc[]>([]);
+  const [isLoading,           setIsLoading]           = useState(true);
   const [showCategoryColumns, setShowCategoryColumns] = useState(false);
   const [editingId,       setEditingId]       = useState<string | null>(null);
   const [editForm,        setEditForm]        = useState<Partial<RecordDoc>>({});
@@ -371,7 +371,7 @@ export function DataManagement() {
   };
 
   /* ── 편집 ────────────────────────────────────────────────────────────── */
-  const startEdit  = (r: RecordDoc) => { setEditingId(r.id); setEditForm({ ...r }); };
+  const startEdit  = (r: RecordDoc) => { setEditingId(r.id); setEditForm({ ...r, updatedAt: r.updatedAt }); };
   const cancelEdit = () => { setEditingId(null); setEditForm({}); };
 
   const updateSubScore = (key: string, val: number) =>
@@ -388,15 +388,23 @@ export function DataManagement() {
         : (editForm.totalScore ?? 0);
 
       const newStatus = scoreToStatus(newTotal, focusCat?.max ?? scoreMaxForBand);
-      const { error } = await supabase.from("kc_records").update({
+      const nowIso = new Date().toISOString();
+      let query = supabase.from("kc_records").update({
         inspector:   editForm.inspector,
         notes:       editForm.notes,
         total_score: newTotal,
         sub_scores:  editForm.subScores ?? null,
         status:      newStatus,
-        updated_at:  new Date().toISOString(),
+        updated_at:  nowIso,
       }).eq("id", id);
+      if (editForm.updatedAt) query = query.eq("updated_at", editForm.updatedAt);
+      const { error, count } = await query.select("id", { count: "exact", head: true });
       if (error) throw error;
+      if (count === 0) {
+        toast("다른 사용자가 이미 수정했습니다. 페이지를 새로고침 후 다시 시도해주세요.", "error");
+        setEditingId(null);
+        return;
+      }
       setEditingId(null);
       toast("수정이 저장되었습니다.", "success");
     } catch {
@@ -564,17 +572,17 @@ export function DataManagement() {
 
               {/* 데스크탑 내보내기 (우측 정렬) */}
               <div className="hidden sm:flex items-center gap-2 ml-auto">
-                <button onClick={exportRawCSV} disabled={isExporting}
+                <Button onClick={exportRawCSV} disabled={isExporting}
                   aria-label="현재 데이터를 CSV로 내보내기"
-                  className={`flex items-center gap-1.5 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded transition-colors disabled:opacity-50 ${focusRing}`}>
-                  <Download className="w-3.5 h-3.5" aria-hidden />CSV
-                </button>
-                <button onClick={exportRawXLSX} disabled={isExporting}
+                  variant="secondary" size="sm" leftIcon={<Download className="w-3.5 h-3.5" aria-hidden />}>
+                  CSV
+                </Button>
+                <Button onClick={exportRawXLSX} disabled={isExporting}
                   aria-label="현재 데이터를 Excel로 내보내기"
-                  className={`flex items-center gap-1.5 px-3 py-2 bg-surface-700 hover:bg-surface-800 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-surface-500`}>
-                  {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden /> : <FileSpreadsheet className="w-3.5 h-3.5" aria-hidden />}
+                  isLoading={isExporting} variant="primary" size="sm"
+                  leftIcon={<FileSpreadsheet className="w-3.5 h-3.5" aria-hidden />}>
                   Excel
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -609,10 +617,12 @@ export function DataManagement() {
                   </>
                 )}
                 {(filterBuildingId || filterDepartmentId || filterInspector) && (
-                  <button onClick={() => updateParams({ building: "", dept: "", inspector: "", page: "0" })}
-                    className={`text-xs text-primary-500 hover:text-primary-700 font-medium col-span-2 sm:col-span-1 text-left ${focusRing}`}>
-                    필터 초기화
-                  </button>
+                  <Button
+                    onClick={() => updateParams({ building: "", dept: "", inspector: "", page: "0" })}
+                    variant="outline" size="sm"
+                    className="col-span-2 sm:col-span-1 w-full sm:w-auto">
+                    필터 초기화 ×
+                  </Button>
                 )}
               </div>
               <div className="flex items-center justify-between">
@@ -625,17 +635,18 @@ export function DataManagement() {
 
             {/* 섹션 3: 모바일 내보내기 */}
             <div className="sm:hidden border-t border-surface-100 px-4 py-3 flex gap-2">
-              <button onClick={exportRawCSV} disabled={isExporting}
+              <Button onClick={exportRawCSV} disabled={isExporting}
                 aria-label="현재 데이터를 CSV로 내보내기"
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded transition-colors disabled:opacity-50 ${focusRing}`}>
-                <Download className="w-4 h-4" aria-hidden />CSV
-              </button>
-              <button onClick={exportRawXLSX} disabled={isExporting}
+                variant="secondary" size="md" className="flex-1"
+                leftIcon={<Download className="w-4 h-4" aria-hidden />}>
+                CSV
+              </Button>
+              <Button onClick={exportRawXLSX} disabled={isExporting}
                 aria-label="현재 데이터를 Excel로 내보내기"
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 bg-surface-700 hover:bg-surface-800 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-surface-500`}>
-                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <FileSpreadsheet className="w-4 h-4" aria-hidden />}
+                isLoading={isExporting} variant="primary" size="md" className="flex-1"
+                leftIcon={<FileSpreadsheet className="w-4 h-4" aria-hidden />}>
                 Excel
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -711,10 +722,8 @@ export function DataManagement() {
                             value={editForm.notes || ""} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} />
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => saveEdit(record.id)}
-                            className={`flex-1 py-2.5 bg-primary-600 text-white rounded text-sm font-semibold hover:bg-primary-700 ${focusRing}`}>저장</button>
-                          <button onClick={cancelEdit}
-                            className={`flex-1 py-2.5 bg-surface-100 text-surface-700 rounded text-sm font-medium hover:bg-surface-200 ${focusRing}`}>취소</button>
+                          <Button onClick={() => saveEdit(record.id)} variant="primary" size="md" className="flex-1">저장</Button>
+                          <Button onClick={cancelEdit} variant="secondary" size="md" className="flex-1">취소</Button>
                         </div>
                       </div>
                     ) : (
@@ -729,25 +738,12 @@ export function DataManagement() {
                           <p className="text-sm text-surface-600 bg-surface-50 rounded px-3 py-2 break-words">{record.notes}</p>
                         )}
                         <div className="flex gap-2 pt-1">
-                          {pendingDeleteId === record.id ? (
-                            <>
-                              <span className="text-xs text-surface-500 self-center mr-1" role="status">삭제할까요?</span>
-                              <button onClick={() => softDeleteRecord(record.id)}
-                                aria-label={`${record.departmentName} 점검 기록 삭제 확인`}
-                                className={`flex-1 py-2.5 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500`}>확인</button>
-                              <button onClick={() => setPendingDeleteId(null)}
-                                className={`flex-1 py-2.5 bg-surface-100 text-surface-700 rounded text-sm font-medium hover:bg-surface-200 ${focusRing}`}>취소</button>
-                            </>
-                          ) : (
-                            <>
-                              <button onClick={() => startEdit(record)}
-                                aria-label={`${record.departmentName} 점검 기록 수정`}
-                                className={`flex-1 py-2.5 bg-white text-surface-700 border border-surface-200 rounded text-sm font-medium hover:bg-surface-50 ${focusRing}`}>수정</button>
-                              <button onClick={() => setPendingDeleteId(record.id)}
-                                aria-label={`${record.departmentName} 점검 기록 삭제`}
-                                className={`flex-1 py-2.5 bg-red-50 text-red-700 border border-red-200 rounded text-sm font-medium hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400`}>삭제</button>
-                            </>
-                          )}
+                          <Button onClick={() => startEdit(record)}
+                            aria-label={`${record.departmentName} 점검 기록 수정`}
+                            variant="secondary" size="md" className="flex-1">수정</Button>
+                          <Button onClick={() => softDeleteRecord(record.id)}
+                            aria-label={`${record.departmentName} 점검 기록 삭제`}
+                            variant="danger" size="md" className="flex-1">삭제</Button>
                         </div>
                       </>
                     )}
@@ -776,7 +772,7 @@ export function DataManagement() {
                         {col.label}<RawSortIcon k={col.key} />
                       </th>
                     ))}
-                    <th scope="col" className="py-3 px-4 font-semibold text-center whitespace-nowrap bg-teal-50 text-teal-700">중점사항</th>
+                    <th scope="col" className="py-3 px-4 font-semibold text-center whitespace-nowrap text-surface-700">중점사항</th>
                     <th scope="col" className="py-3 px-4 text-center whitespace-nowrap">
                       <button
                         onClick={() => setShowCategoryColumns(p => !p)}
@@ -924,28 +920,19 @@ export function DataManagement() {
                         <td className="py-3 px-4 text-right whitespace-nowrap">
                           {isEditing ? (
                             <div className="flex justify-end gap-2">
-                              <button onClick={() => saveEdit(record.id)}
-                                className={`px-3 py-1.5 min-h-[36px] bg-primary-600 text-white rounded text-xs hover:bg-primary-700 ${focusRing}`}>저장</button>
-                              <button onClick={cancelEdit}
-                                className={`px-3 py-1.5 min-h-[36px] bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300 ${focusRing}`}>취소</button>
-                            </div>
-                          ) : pendingDeleteId === record.id ? (
-                            <div className="flex justify-end gap-1.5 items-center">
-                              <span className="text-xs text-surface-400" role="status">삭제할까요?</span>
-                              <button onClick={() => softDeleteRecord(record.id)}
-                                aria-label={`${record.departmentName} 점검 기록 삭제 확인`}
-                                className={`px-3 py-1.5 min-h-[36px] bg-red-600 text-white rounded text-xs hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500`}>확인</button>
-                              <button onClick={() => setPendingDeleteId(null)}
-                                className={`px-3 py-1.5 min-h-[36px] bg-surface-200 text-surface-700 rounded text-xs hover:bg-surface-300 ${focusRing}`}>취소</button>
+                              <Button onClick={() => saveEdit(record.id)}
+                                aria-label={`${record.departmentName} 점검 기록 저장`}
+                                variant="primary" size="sm">저장</Button>
+                              <Button onClick={cancelEdit} variant="secondary" size="sm">취소</Button>
                             </div>
                           ) : (
                             <div className="flex justify-end gap-2 items-center">
-                              <button onClick={() => startEdit(record)}
+                              <Button onClick={() => startEdit(record)}
                                 aria-label={`${record.departmentName} 점검 기록 수정`}
-                                className={`px-3 py-1.5 min-h-[36px] text-surface-700 bg-white border border-surface-200 rounded text-xs hover:bg-surface-50 ${focusRing}`}>수정</button>
-                              <button onClick={() => setPendingDeleteId(record.id)}
+                                variant="secondary" size="sm">수정</Button>
+                              <Button onClick={() => softDeleteRecord(record.id)}
                                 aria-label={`${record.departmentName} 점검 기록 삭제`}
-                                className={`px-3 py-1.5 min-h-[36px] text-red-600 bg-white border border-surface-200 rounded text-xs hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-400`}>삭제</button>
+                                variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">삭제</Button>
                             </div>
                           )}
                         </td>
@@ -1006,17 +993,17 @@ export function DataManagement() {
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={exportAggregateCSV} disabled={isExporting}
+              <Button onClick={exportAggregateCSV} disabled={isExporting}
                 aria-label="집계 데이터를 CSV로 내보내기"
-                className={`flex items-center gap-2 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded transition-colors disabled:opacity-50 ${focusRing}`}>
-                <Download className="w-4 h-4" aria-hidden />CSV
-              </button>
-              <button onClick={exportAggregateXLSX} disabled={isExporting}
+                variant="secondary" size="sm" leftIcon={<Download className="w-3.5 h-3.5" aria-hidden />}>
+                CSV
+              </Button>
+              <Button onClick={exportAggregateXLSX} disabled={isExporting}
                 aria-label="집계 데이터를 Excel로 내보내기"
-                className={`flex items-center gap-2 px-3 py-2 bg-surface-700 hover:bg-surface-800 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-surface-500`}>
-                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <FileSpreadsheet className="w-4 h-4" aria-hidden />}
+                isLoading={isExporting} variant="primary" size="sm"
+                leftIcon={<FileSpreadsheet className="w-3.5 h-3.5" aria-hidden />}>
                 Excel
-              </button>
+              </Button>
             </div>
           </div>
 

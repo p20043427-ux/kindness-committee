@@ -90,6 +90,7 @@ export interface AppRecord {
   status: string;
   userId: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export function rowToRecord(r: RecordRow): AppRecord {
@@ -114,6 +115,7 @@ export function rowToRecord(r: RecordRow): AppRecord {
     status: r.status || '정상',
     userId: r.user_id || '',
     createdAt: r.created_at || '',
+    updatedAt: r.updated_at,
   };
 }
 
