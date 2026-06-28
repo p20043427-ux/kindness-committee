@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import { Check, X, Info, AlertTriangle, type LucideIcon } from "lucide-react";
 
 type ToastType = "success" | "error" | "info" | "warning";
 
@@ -24,11 +25,11 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-const ICONS: Record<ToastType, string> = {
-  success: "✓",
-  error: "✕",
-  info: "ℹ",
-  warning: "⚠",
+const ICONS: Record<ToastType, LucideIcon> = {
+  success: Check,
+  error: X,
+  info: Info,
+  warning: AlertTriangle,
 };
 
 const STYLES: Record<ToastType, string> = {
@@ -86,7 +87,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               ${STYLES[t.type]}
             `}
           >
-            <span className="shrink-0 font-bold">{ICONS[t.type]}</span>
+            {React.createElement(ICONS[t.type], { className: "w-4 h-4 shrink-0", "aria-hidden": true })}
             <span className="flex-1 leading-snug">{t.message}</span>
             {t.action && (
               <button
@@ -100,7 +101,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               onClick={() => dismiss(t.id)}
               aria-label="알림 닫기"
               className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
-            >✕</button>
+            ><X className="w-4 h-4" aria-hidden /></button>
           </div>
         ))}
       </div>

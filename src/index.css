@@ -28,6 +28,14 @@
   --color-surface-800: var(--color-slate-800);
   --color-surface-900: var(--color-slate-900);
   --color-surface-950: var(--color-slate-950);
+
+  /* 시맨틱 토큰 */
+  --color-success: var(--color-green-600);
+  --color-success-bg: var(--color-green-50);
+  --color-warning: var(--color-amber-600);
+  --color-warning-bg: var(--color-amber-50);
+  --color-destructive: var(--color-red-600);
+  --color-destructive-bg: var(--color-red-50);
 }
 
 body {
