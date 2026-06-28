@@ -1,37 +1,42 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useToast } from "@/src/components/ui/Toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/Card";
 import { Badge } from "@/src/components/ui/Badge";
+import { Button } from "@/src/components/ui/Button";
 import { PageHeader } from "@/src/components/ui/PageHeader";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings, MonthlyFocusMap } from "@/src/components/layout/SettingsProvider";
 import { InspectionCategory, CategoryKey, MAX_TOTAL_SCORE } from "@/src/lib/data";
 import { supabase } from "@/src/lib/supabase";
-import { Building2, ClipboardList, AlertTriangle } from "lucide-react";
+import { downloadExcel } from "@/src/lib/excel";
+import { Building2, ClipboardList, AlertTriangle, Download, FileSpreadsheet, ArchiveRestore, HardDriveDownload } from "lucide-react";
 
 export function Admin() {
   const { buildings, departments } = useOrganization();
   const { categories, monthlyFocus, saveCategories, saveMonthlyFocus, categoryName } = useSettings();
   const { toast } = useToast();
-  const [isExporting, setIsExporting] = useState(false);
 
-  // 점검 항목 설정 편집 상태
   const [editSection, setEditSection] = useState<null | "categories" | "focus">(null);
   const [catDraft, setCatDraft] = useState<InspectionCategory[]>([]);
   const [focusDraft, setFocusDraft] = useState<MonthlyFocusMap>({});
   const [focusYear, setFocusYear] = useState(new Date().getFullYear());
   const [isSaving, setIsSaving] = useState(false);
 
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
+  const [isExportingXLSX, setIsExportingXLSX] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const restoreInputRef = useRef<HTMLInputElement>(null);
+
+  /* ── 점검 항목 설정 ─────────────────────────────────────────────── */
   const openCategoryEditor = () => {
     setCatDraft(categories.map(c => ({ ...c })));
     setEditSection(editSection === "categories" ? null : "categories");
   };
-
   const openFocusEditor = () => {
     setFocusDraft({ ...monthlyFocus });
     setEditSection(editSection === "focus" ? null : "focus");
   };
-
   const setCatField = (key: CategoryKey, field: "name" | "details", value: string) =>
     setCatDraft(prev => prev.map(c => (c.key === key ? { ...c, [field]: value } : c)));
 
@@ -47,7 +52,7 @@ export function Admin() {
       setEditSection(null);
     } catch (e) {
       console.error(e);
-      toast("저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
+      toast("저장 중 오류가 발생했습니다.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -69,57 +74,126 @@ export function Admin() {
       setEditSection(null);
     } catch (e) {
       console.error(e);
-      toast("저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
+      toast("저장 중 오류가 발생했습니다.", "error");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const exportAllData = async () => {
-    setIsExporting(true);
+  /* ── 공통: 레코드 로딩 ─────────────────────────────────────────── */
+  const fetchAllRecords = async () => {
+    const { data, error } = await supabase.from("kc_records").select("*").order("date", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  };
+
+  const buildingName = (id: string) => buildings.find(b => b.id === id)?.name || id || "";
+  const today = () => new Date().toISOString().split("T")[0];
+
+  const recordHeaders = ["점검일시", "건물명", "부서명", "점검자", "상태", "총점", ...categories.map(c => c.name), "중점사항", "특이사항"];
+  const recordToRow = (r: any): (string | number)[] => [
+    r.date ? new Date(r.date).toLocaleDateString("ko-KR") : "",
+    buildingName(r.building_id),
+    r.department_name || "",
+    r.inspector || "",
+    r.status || "",
+    r.total_score ?? 0,
+    ...categories.map(c => r[c.key] ?? 0),
+    r.focus_category ? categoryName(r.focus_category) : "",
+    r.notes || "",
+  ];
+
+  /* ── CSV 내보내기 ───────────────────────────────────────────────── */
+  const exportCSV = async () => {
+    setIsExportingCSV(true);
     try {
-      const { data: records, error } = await supabase.from("kc_records").select("*");
-      if (error) throw error;
+      const records = await fetchAllRecords();
+      const escapeCSV = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+      const rows = [recordHeaders.map(escapeCSV).join(",")];
+      records.forEach(r => rows.push(recordToRow(r).map(escapeCSV).join(",")));
+      const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+      triggerDownload(blob, `친절점검_${today()}.csv`);
+      toast(`CSV 내보내기 완료 (${records.length}건)`, "success");
+    } catch (e) {
+      console.error(e);
+      toast("CSV 내보내기 중 오류가 발생했습니다.", "error");
+    } finally {
+      setIsExportingCSV(false);
+    }
+  };
 
-      const headers = ["점검일시", "건물명", "부서명", "점검자", "상태", "총점", ...categories.map(c => c.name), "중점사항", "특이사항"];
-      const csvRows = [headers.join(",")];
+  /* ── Excel 내보내기 ─────────────────────────────────────────────── */
+  const exportExcel = async () => {
+    setIsExportingXLSX(true);
+    try {
+      const records = await fetchAllRecords();
+      downloadExcel(
+        [{ headers: recordHeaders, rows: records.map(recordToRow), sheetName: "점검기록" }],
+        `친절점검_${today()}.xlsx`
+      );
+      toast(`Excel 내보내기 완료 (${records.length}건)`, "success");
+    } catch (e) {
+      console.error(e);
+      toast("Excel 내보내기 중 오류가 발생했습니다.", "error");
+    } finally {
+      setIsExportingXLSX(false);
+    }
+  };
 
-      (records || []).forEach((data: any) => {
-        const bName = buildings.find(b => b.id === data.building_id)?.name || data.building_id || "";
-        const dName = data.department_name || departments.find(d => d.id === data.department_id)?.name || "";
-        const dDate = data.created_at ? new Date(data.created_at).toLocaleString('ko-KR') : "";
-
-        const escapeCSV = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`;
-
-        const row = [
-          escapeCSV(dDate),
-          escapeCSV(bName),
-          escapeCSV(dName),
-          escapeCSV(data.inspector || ""),
-          escapeCSV(data.status || ""),
-          escapeCSV(data.total_score || 0),
-          ...categories.map(c => escapeCSV(data[c.key] || 0)),
-          escapeCSV(data.focus_category ? categoryName(data.focus_category) : ""),
-          escapeCSV(data.notes || "")
-        ];
-        csvRows.push(row.join(","));
-      });
-
-      const bom = "\uFEFF";
-      const blob = new Blob([bom + csvRows.join("\n")], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `시스템전체백업_${new Date().toISOString().split("T")[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  /* ── JSON 전체 백업 ─────────────────────────────────────────────── */
+  const backupJSON = async () => {
+    setIsBackingUp(true);
+    try {
+      const records = await fetchAllRecords();
+      const payload = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        settings: { categories, monthlyFocus },
+        records,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      triggerDownload(blob, `친절점검_백업_${today()}.json`);
+      toast(`전체 백업 완료 (레코드 ${records.length}건)`, "success");
     } catch (e) {
       console.error(e);
       toast("백업 중 오류가 발생했습니다.", "error");
     } finally {
-      setIsExporting(false);
+      setIsBackingUp(false);
     }
+  };
+
+  /* ── JSON 복구 ──────────────────────────────────────────────────── */
+  const restoreJSON = async (file: File) => {
+    setIsRestoring(true);
+    try {
+      const text = await file.text();
+      const payload = JSON.parse(text);
+      if (!payload.records || !Array.isArray(payload.records)) {
+        toast("올바른 백업 파일이 아닙니다. (records 필드 없음)", "error");
+        return;
+      }
+      const { error } = await supabase.from("kc_records").upsert(payload.records, { onConflict: "id" });
+      if (error) throw error;
+      toast(`복구 완료: ${payload.records.length}건 가져왔습니다. 페이지를 새로고침하세요.`, "success");
+    } catch (e: any) {
+      console.error(e);
+      toast(`복구 실패: ${e.message || "파일을 확인해주세요."}`, "error");
+    } finally {
+      setIsRestoring(false);
+      if (restoreInputRef.current) restoreInputRef.current.value = "";
+    }
+  };
+
+  /* ── 유틸 ──────────────────────────────────────────────────────── */
+  const triggerDownload = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const months = Array.from({ length: 12 }, (_, i) => {
@@ -135,6 +209,7 @@ export function Admin() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 건물 마스터 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -158,6 +233,7 @@ export function Admin() {
           </CardContent>
         </Card>
 
+        {/* 점검 항목 설정 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -207,6 +283,7 @@ export function Admin() {
           </CardContent>
         </Card>
 
+        {/* 카테고리 편집 */}
         {editSection === "categories" && (
           <Card className="md:col-span-2 border-primary-200 animate-in slide-in-from-top-2 fade-in duration-200">
             <CardHeader>
@@ -237,27 +314,16 @@ export function Admin() {
                     <span className="text-xs text-surface-500 font-mono text-center">{c.max}점</span>
                   </div>
                 ))}
-                <div className="flex justify-end space-x-2 pt-2">
-                  <button
-                    onClick={() => setEditSection(null)}
-                    disabled={isSaving}
-                    className="px-4 py-2 rounded border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors"
-                  >
-                    취소
-                  </button>
-                  <button
-                    onClick={handleSaveCategories}
-                    disabled={isSaving}
-                    className="px-4 py-2 rounded bg-surface-900 text-white font-medium text-sm hover:bg-surface-800 transition-colors disabled:opacity-50"
-                  >
-                    {isSaving ? "저장 중..." : "저장"}
-                  </button>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="secondary" size="md" onClick={() => setEditSection(null)} disabled={isSaving}>취소</Button>
+                  <Button variant="primary" size="md" onClick={handleSaveCategories} isLoading={isSaving}>저장</Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
 
+        {/* 월별 중점사항 편집 */}
         {editSection === "focus" && (
           <Card className="md:col-span-2 border-teal-200 animate-in slide-in-from-top-2 fade-in duration-200">
             <CardHeader>
@@ -265,23 +331,19 @@ export function Admin() {
                 <div>
                   <CardTitle className="text-base">월별 중점사항 운영</CardTitle>
                   <p className="text-xs text-surface-500 mt-1">
-                    매월 한 가지 카테고리를 중점사항으로 지정합니다. 점검표 입력 시 해당 월의 중점사항이 자동 선택됩니다.
+                    매월 한 가지 카테고리를 중점사항으로 지정합니다.
                   </p>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setFocusYear(y => y - 1)}
                     className="w-8 h-8 rounded border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold"
-                  >
-                    ◀
-                  </button>
+                  >◀</button>
                   <span className="font-bold text-surface-900 font-mono">{focusYear}년</span>
                   <button
                     onClick={() => setFocusYear(y => y + 1)}
                     className="w-8 h-8 rounded border border-surface-300 text-surface-600 hover:bg-surface-100 font-bold"
-                  >
-                    ▶
-                  </button>
+                  >▶</button>
                 </div>
               </div>
             </CardHeader>
@@ -314,26 +376,113 @@ export function Admin() {
                   );
                 })}
               </div>
-              <div className="flex justify-end space-x-2 pt-4">
-                <button
-                  onClick={() => setEditSection(null)}
-                  disabled={isSaving}
-                  className="px-4 py-2 rounded border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleSaveFocus}
-                  disabled={isSaving}
-                  className="px-4 py-2 rounded bg-surface-900 text-white font-medium text-sm hover:bg-surface-800 transition-colors disabled:opacity-50"
-                >
-                  {isSaving ? "저장 중..." : "저장"}
-                </button>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="secondary" size="md" onClick={() => setEditSection(null)} disabled={isSaving}>취소</Button>
+                <Button variant="primary" size="md" onClick={handleSaveFocus} isLoading={isSaving}>저장</Button>
               </div>
             </CardContent>
           </Card>
         )}
 
+        {/* 데이터 내보내기 */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <HardDriveDownload className="w-4 h-4 text-surface-500" aria-hidden /> 데이터 내보내기 / 백업 / 복구
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* CSV */}
+              <div className="flex items-start justify-between gap-4 p-4 border border-surface-200 rounded-lg bg-surface-50">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm text-surface-900 flex items-center gap-1.5">
+                    <Download className="w-3.5 h-3.5 shrink-0 text-surface-500" /> CSV 내보내기
+                  </p>
+                  <p className="text-xs text-surface-500 mt-1">모든 점검 기록을 엑셀 호환 CSV 파일로 저장합니다.</p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={exportCSV}
+                  isLoading={isExportingCSV}
+                  className="shrink-0"
+                >
+                  CSV
+                </Button>
+              </div>
+
+              {/* Excel */}
+              <div className="flex items-start justify-between gap-4 p-4 border border-surface-200 rounded-lg bg-surface-50">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm text-surface-900 flex items-center gap-1.5">
+                    <FileSpreadsheet className="w-3.5 h-3.5 shrink-0 text-green-600" /> Excel 내보내기
+                  </p>
+                  <p className="text-xs text-surface-500 mt-1">서식이 적용된 .xlsx 파일로 다운로드합니다.</p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={exportExcel}
+                  isLoading={isExportingXLSX}
+                  className="shrink-0"
+                >
+                  Excel
+                </Button>
+              </div>
+
+              {/* JSON 백업 */}
+              <div className="flex items-start justify-between gap-4 p-4 border border-primary-200 rounded-lg bg-primary-50/40">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm text-surface-900 flex items-center gap-1.5">
+                    <HardDriveDownload className="w-3.5 h-3.5 shrink-0 text-primary-600" /> 전체 백업 (JSON)
+                  </p>
+                  <p className="text-xs text-surface-500 mt-1">점검 기록 + 설정 전체를 JSON으로 백업합니다. 복구 시 사용합니다.</p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={backupJSON}
+                  isLoading={isBackingUp}
+                  className="shrink-0"
+                >
+                  백업
+                </Button>
+              </div>
+
+              {/* JSON 복구 */}
+              <div className="flex items-start justify-between gap-4 p-4 border border-amber-200 rounded-lg bg-amber-50/40">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm text-surface-900 flex items-center gap-1.5">
+                    <ArchiveRestore className="w-3.5 h-3.5 shrink-0 text-amber-600" /> 백업 복구 (JSON)
+                  </p>
+                  <p className="text-xs text-surface-500 mt-1">백업 파일을 불러와 데이터를 복원합니다. 기존 레코드는 덮어씁니다.</p>
+                </div>
+                <input
+                  ref={restoreInputRef}
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) restoreJSON(file);
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => restoreInputRef.current?.click()}
+                  isLoading={isRestoring}
+                  className="shrink-0"
+                >
+                  복구
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 보안 및 고급 설정 */}
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-600">
@@ -341,37 +490,12 @@ export function Admin() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between py-4 border-b border-surface-100">
-              <div>
-                <p className="font-medium text-sm text-surface-900">데이터 백업</p>
-                <p className="text-xs text-surface-500 mt-1">모든 점검 기록 및 마스터 데이터를 CSV 파일로 내보냅니다.</p>
-              </div>
-              <button
-                onClick={exportAllData}
-                disabled={isExporting}
-                className="px-4 py-2 bg-surface-100 text-surface-700 text-sm font-medium rounded hover:bg-surface-200 disabled:opacity-50"
-              >
-                {isExporting ? "추출 중..." : "내보내기"}
-              </button>
-            </div>
-            <div className="flex items-center justify-between py-4 border-b border-surface-100">
-              <div>
-                <p className="font-medium text-sm text-surface-900">알림 설정</p>
-                <p className="text-xs text-surface-500 mt-1">'긴급' 상태 발생 시 원무팀(내선 1000)으로 자동 SMS를 발송합니다.</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-surface-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-              </label>
-            </div>
             <div className="flex items-center justify-between py-4">
               <div>
                 <p className="font-medium text-sm text-red-600">시스템 초기화</p>
                 <p className="text-xs text-surface-500 mt-1">모든 설정과 데이터를 초기 상태로 되돌립니다. (복구 불가)</p>
               </div>
-              <button className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded transition-colors">
-                초기화 진행
-              </button>
+              <Button variant="danger" size="md">초기화 진행</Button>
             </div>
           </CardContent>
         </Card>
