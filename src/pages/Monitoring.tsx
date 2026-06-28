@@ -127,30 +127,36 @@ export function Monitoring() {
         return;
       }
 
-      // 2. CSV 헤더 구성
-      const headers = ["점검일자", "건물명", "부서명", "점검자", "상태", "총점(50점 만점)", ...categories.map(c => c.name), "특이사항"];
+      // 2. CSV 헤더 구성 (DB 컬럼명과 카테고리 key가 일치함을 명시적으로 매핑)
+      const CAT_DB_COLS: Record<string, string> = {
+        greeting:    "greeting",
+        response:    "response",
+        phone:       "phone",
+        appearance:  "appearance",
+        environment: "environment",
+      };
+
+      const headers = ["점검일자", "건물명", "부서명", "점검자", "상태", "총점", ...categories.map(c => c.name), "특이사항"];
       const csvRows = [headers.join(",")];
 
-      filteredDocs.forEach((data) => {
-        // 건물 아이디 매칭
-        const bName = buildings.find(b => b.id === data.building_id)?.name || data.building_id || "";
-        const dName = data.department_name || departments.find(d => d.id === data.department_id)?.name || "";
-        const dDate = (data.date || "").split("T")[0]; // yyyy-mm-dd
+      const escapeCSV = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`;
 
-        // 각 필드 콤마나 개행 제거 혹은 따옴표로 감싸기
-        const escapeCSV = (val: string | number) => `"${String(val).replace(/"/g, '""')}"`;
+      filteredDocs.forEach((row) => {
+        const bName = buildings.find(b => b.id === row.building_id)?.name || row.building_id || "";
+        const dName = row.department_name || departments.find(d => d.id === row.department_id)?.name || "";
+        const dDate = (row.date || "").split("T")[0];
 
-        const row = [
+        const csvRow = [
           escapeCSV(dDate),
           escapeCSV(bName),
           escapeCSV(dName),
-          escapeCSV(data.inspector || ""),
-          escapeCSV(data.status || ""),
-          escapeCSV(data.total_score || 0),
-          ...categories.map(c => escapeCSV(data[c.key] || 0)),
-          escapeCSV(data.notes || "")
+          escapeCSV(row.inspector || ""),
+          escapeCSV(row.status || ""),
+          escapeCSV(row.total_score ?? 0),
+          ...categories.map(c => escapeCSV(row[CAT_DB_COLS[c.key] ?? c.key] ?? 0)),
+          escapeCSV(row.notes || ""),
         ];
-        csvRows.push(row.join(","));
+        csvRows.push(csvRow.join(","));
       });
 
       // 3. Blob 생성 및 파일 다운로드 유도 (BOM 포함하여 한글 깨짐 방지)

@@ -85,7 +85,7 @@ export function Committee() {
         if (error) throw error;
       } else {
         const { error } = await supabase.from("kc_committee").insert({
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           ...row,
           created_at: new Date().toISOString(),
         });
@@ -110,7 +110,28 @@ export function Committee() {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-surface-500">명단을 불러오는 중입니다...</div>;
+    return (
+      <div className="space-y-6 animate-in fade-in duration-300 max-w-4xl mx-auto">
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <div className="h-8 w-48 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+            <div className="h-4 w-64 bg-surface-100 rounded motion-safe:animate-pulse" />
+          </div>
+          <div className="h-10 w-24 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+        </div>
+        <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
+          <div className="h-12 bg-surface-50 border-b border-surface-200" />
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-surface-100">
+              <div className="h-4 w-20 bg-surface-200 rounded motion-safe:animate-pulse" />
+              <div className="h-4 w-28 bg-surface-100 rounded motion-safe:animate-pulse" />
+              <div className="h-4 w-20 bg-surface-100 rounded motion-safe:animate-pulse" />
+              <div className="h-6 w-14 bg-surface-200 rounded-md motion-safe:animate-pulse ml-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

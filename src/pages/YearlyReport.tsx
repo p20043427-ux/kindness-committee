@@ -421,7 +421,7 @@ export function YearlyReport() {
                   <div className="space-y-2">
                     {deptData.slice(0, 10).map((dept, i) => {
                       const building = buildings.find(b => b.id === dept.buildingId);
-                      const pct = ((dept.avg! / 10) * 100).toFixed(0);
+                      const pct = Math.min(100, ((dept.avg! / scoreMax) * 100)).toFixed(0);
                       const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
                       return (
                         <div key={dept.id} className="flex items-center gap-3">
