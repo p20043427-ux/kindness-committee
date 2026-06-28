@@ -721,9 +721,9 @@ export function DataManagement() {
                             className="w-full px-3 py-2 text-sm border border-surface-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 resize-none"
                             value={editForm.notes || ""} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} />
                         </div>
-                        <div className="flex gap-2">
-                          <Button onClick={() => saveEdit(record.id)} variant="primary" size="md" className="flex-1">저장</Button>
-                          <Button onClick={cancelEdit} variant="secondary" size="md" className="flex-1">취소</Button>
+                        <div className="flex flex-col gap-2 pt-1">
+                          <Button onClick={() => saveEdit(record.id)} variant="primary" size="lg" className="w-full">저장</Button>
+                          <Button onClick={cancelEdit} variant="secondary" size="lg" className="w-full">취소</Button>
                         </div>
                       </div>
                     ) : (
@@ -740,10 +740,10 @@ export function DataManagement() {
                         <div className="flex gap-2 pt-1">
                           <Button onClick={() => startEdit(record)}
                             aria-label={`${record.departmentName} 점검 기록 수정`}
-                            variant="secondary" size="md" className="flex-1">수정</Button>
+                            variant="secondary" size="lg" className="flex-1">수정</Button>
                           <Button onClick={() => softDeleteRecord(record.id)}
                             aria-label={`${record.departmentName} 점검 기록 삭제`}
-                            variant="danger" size="md" className="flex-1">삭제</Button>
+                            variant="danger" size="lg" className="flex-1">삭제</Button>
                         </div>
                       </>
                     )}
