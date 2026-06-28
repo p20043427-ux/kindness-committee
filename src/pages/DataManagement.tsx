@@ -387,19 +387,10 @@ export function DataManagement() {
   const saveEdit = async (id: string) => {
     if (!id) return;
     try {
-      const s = { ...emptyScores, ...editForm.scores } as CategoryScores;
       const { error } = await supabase.from("kc_records").update({
-        inspector:   editForm.inspector,
-        greeting:    s.greeting,
-        response:    s.response,
-        phone:       s.phone,
-        appearance:  s.appearance,
-        environment: s.environment,
-        total_score: editForm.totalScore,
-        notes:       editForm.notes,
-        status:      editForm.status,
-        sub_scores:  editForm.subScores ?? null,  // ← Critical fix
-        updated_at:  new Date().toISOString(),
+        inspector:  editForm.inspector,
+        notes:      editForm.notes,
+        updated_at: new Date().toISOString(),
       }).eq("id", id);
       if (error) throw error;
       setEditingId(null);
@@ -527,41 +518,43 @@ export function DataManagement() {
           {/* 필터 카드 */}
           <div className="bg-white border border-surface-200 rounded">
             {/* 섹션 1: 조회 기간 */}
-            <div className="p-4 flex flex-wrap gap-2 items-center">
+            <div className="p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-center">
+              {/* 조회 방식 select — 모바일 전체 폭 */}
               <label htmlFor="filter-type" className="sr-only">조회 방식</label>
               <select id="filter-type" value={filterType}
                 onChange={e => updateParams({ type: e.target.value, page: "0" })}
-                className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700 font-medium">
+                className="w-full sm:w-auto bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700 font-medium">
                 <option value="month">월간 조회</option>
                 <option value="range">기간 조회</option>
               </select>
 
               {filterType === "month" ? (
-                <>
+                /* 월 선택 + 빠른 버튼: 한 줄 flex, 버튼 그룹이 함께 이동 */
+                <div className="flex items-center gap-2">
                   <label htmlFor="filter-month" className="sr-only">조회 월</label>
                   <input id="filter-month" type="month" value={filterMonth}
                     onChange={e => updateParams({ month: e.target.value, page: "0" })}
-                    className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-900 font-semibold" />
-                  <div className="flex gap-1.5">
+                    className="flex-1 sm:flex-none bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-900 font-semibold min-w-0" />
+                  <div className="flex gap-1.5 shrink-0">
                     {[{ label: "이번 달", value: currentYearMonth }, { label: "지난 달", value: prevYearMonth }].map(p => (
                       <button key={p.label} onClick={() => updateParams({ month: p.value, page: "0" })}
-                        className={`text-xs px-2.5 py-2 rounded border transition-colors ${focusRing} ${filterMonth === p.value ? "bg-primary-600 text-white border-primary-600" : "bg-surface-50 border-surface-300 text-surface-600 hover:bg-surface-100"}`}>
+                        className={`text-xs px-2.5 py-2 rounded border transition-colors whitespace-nowrap ${focusRing} ${filterMonth === p.value ? "bg-primary-600 text-white border-primary-600" : "bg-surface-50 border-surface-300 text-surface-600 hover:bg-surface-100"}`}>
                         {p.label}
                       </button>
                     ))}
                   </div>
-                </>
+                </div>
               ) : (
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
                   <label htmlFor="start-date" className="sr-only">시작일</label>
                   <input id="start-date" type="date" value={startDateLocal}
                     onChange={e => setStartDateLocal(e.target.value)}
-                    className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-900" />
-                  <span aria-hidden className="text-surface-400 text-xs font-medium">~</span>
+                    className="flex-1 sm:flex-none bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-900 min-w-0" />
+                  <span aria-hidden className="text-surface-400 text-xs font-medium shrink-0">~</span>
                   <label htmlFor="end-date" className="sr-only">종료일</label>
                   <input id="end-date" type="date" value={endDateLocal}
                     onChange={e => setEndDateLocal(e.target.value)}
-                    className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-900" />
+                    className="flex-1 sm:flex-none bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-900 min-w-0" />
                 </div>
               )}
 
@@ -582,43 +575,48 @@ export function DataManagement() {
             </div>
 
             {/* 섹션 2: 필터 */}
-            <div className="border-t border-surface-100 px-4 py-3 flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-surface-400 mr-1" aria-hidden>필터</span>
-              <label htmlFor="filter-building" className="sr-only">건물 필터</label>
-              <select id="filter-building" value={filterBuildingId}
-                onChange={e => handleBuildingFilterChange(e.target.value)}
-                className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700">
-                <option value="">전체 건물</option>
-                {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-              <label htmlFor="filter-dept" className="sr-only">부서 필터</label>
-              <select id="filter-dept" value={filterDepartmentId}
-                onChange={e => updateParams({ dept: e.target.value, page: "0" })}
-                className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700">
-                <option value="">전체 부서</option>
-                {(filterBuildingId ? departments.filter(d => d.buildingId === filterBuildingId) : departments)
-                  .map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-              {inspectorOptions.length > 0 && (
-                <>
-                  <label htmlFor="filter-inspector" className="sr-only">점검자 필터</label>
-                  <select id="filter-inspector" value={filterInspector}
-                    onChange={e => updateParams({ inspector: e.target.value, page: "0" })}
-                    className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700">
-                    <option value="">전체 점검자</option>
-                    {inspectorOptions.map(name => <option key={name} value={name}>{name}</option>)}
-                  </select>
-                </>
-              )}
-              {(filterBuildingId || filterDepartmentId || filterInspector) && (
-                <button onClick={() => updateParams({ building: "", dept: "", inspector: "", page: "0" })}
-                  className={`text-xs text-primary-500 hover:text-primary-700 font-medium ${focusRing}`}>
-                  초기화
-                </button>
-              )}
-              <span className="ml-auto text-xs text-surface-400 font-mono tabular-nums" aria-live="polite">
-                {displayRecords.length}건{totalPages > 1 ? ` / ${safePage + 1}/${totalPages} 페이지` : ""}
-              </span>
+            <div className="border-t border-surface-100 px-3 sm:px-4 py-3 space-y-2">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:items-center">
+                <span className="sr-only">필터</span>
+                <label htmlFor="filter-building" className="sr-only">건물 필터</label>
+                <select id="filter-building" value={filterBuildingId}
+                  onChange={e => handleBuildingFilterChange(e.target.value)}
+                  className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700 w-full sm:w-auto">
+                  <option value="">전체 건물</option>
+                  {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+                <label htmlFor="filter-dept" className="sr-only">부서 필터</label>
+                <select id="filter-dept" value={filterDepartmentId}
+                  onChange={e => updateParams({ dept: e.target.value, page: "0" })}
+                  className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700 w-full sm:w-auto">
+                  <option value="">전체 부서</option>
+                  {(filterBuildingId ? departments.filter(d => d.buildingId === filterBuildingId) : departments)
+                    .map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+                {inspectorOptions.length > 0 && (
+                  <>
+                    <label htmlFor="filter-inspector" className="sr-only">점검자 필터</label>
+                    <select id="filter-inspector" value={filterInspector}
+                      onChange={e => updateParams({ inspector: e.target.value, page: "0" })}
+                      className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 text-surface-700 w-full sm:w-auto col-span-2 sm:col-span-1">
+                      <option value="">전체 점검자</option>
+                      {inspectorOptions.map(name => <option key={name} value={name}>{name}</option>)}
+                    </select>
+                  </>
+                )}
+                {(filterBuildingId || filterDepartmentId || filterInspector) && (
+                  <button onClick={() => updateParams({ building: "", dept: "", inspector: "", page: "0" })}
+                    className={`text-xs text-primary-500 hover:text-primary-700 font-medium col-span-2 sm:col-span-1 text-left ${focusRing}`}>
+                    필터 초기화
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-surface-400" aria-hidden>조회 결과</span>
+                <span className="text-xs text-surface-500 font-mono tabular-nums font-medium" aria-live="polite">
+                  {displayRecords.length}건{totalPages > 1 ? ` / ${safePage + 1}/${totalPages} 페이지` : ""}
+                </span>
+              </div>
             </div>
 
             {/* 섹션 3: 모바일 내보내기 */}
@@ -662,31 +660,55 @@ export function DataManagement() {
                       </span>
                     </div>
                     {isEditing ? (
-                      <div className="space-y-2 pt-2 border-t border-surface-100">
+                      <div className="space-y-3 pt-3 border-t border-surface-100">
+                        {/* 점검자 */}
                         <div>
-                          <label htmlFor={`m-insp-${record.id}`} className="block text-xs font-medium text-surface-500 mb-0.5">점검자</label>
+                          <label htmlFor={`m-insp-${record.id}`} className="block text-xs font-medium text-surface-500 mb-1">점검자</label>
                           <input id={`m-insp-${record.id}`} type="text"
-                            className="w-full px-3 py-2 text-sm border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full px-3 py-2 text-sm border border-surface-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
                             value={editForm.inspector || ""} onChange={e => setEditForm({ ...editForm, inspector: e.target.value })} />
                         </div>
-                        {categories.map(c => (
-                          <div key={c.key} className="flex items-center justify-between">
-                            <label htmlFor={`m-${c.key}-${record.id}`} className="text-sm text-surface-600">{c.name}</label>
-                            <input id={`m-${c.key}-${record.id}`} type="number" min="0" max="10"
-                              className="w-16 px-2 py-1.5 text-center text-sm border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-                              value={editForm.scores?.[c.key as keyof RecordDoc["scores"]] ?? 0}
-                              onChange={e => handleScoreChange(c.key as keyof RecordDoc["scores"], e.target.value)} />
+                        {/* 중점사항 점수 — 읽기 전용 */}
+                        {focusCat && (
+                          <div className="rounded border border-surface-200 overflow-hidden">
+                            <div className="bg-surface-50 px-3 py-2 flex items-center justify-between border-b border-surface-100">
+                              <span className="text-xs font-bold text-surface-600">중점사항 점수</span>
+                              <span className="text-xs font-mono font-bold text-primary-600">{record.totalScore}/{focusCat.max}점</span>
+                            </div>
+                            <div className="px-3 py-2 space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-surface-700">{focusCat.name}</span>
+                                <StatusBadge status={record.status} />
+                              </div>
+                              {record.subScores && focusCat.subCriteria.map(sub => {
+                                const val = record.subScores![`${focusCat.key}_${sub.key}`];
+                                return (
+                                  <div key={sub.key} className="flex items-center justify-between text-xs text-surface-600">
+                                    <span>{sub.name}</span>
+                                    <span className="font-mono font-semibold">{val ?? 0}/{sub.max}</span>
+                                  </div>
+                                );
+                              })}
+                              <div className="h-1 bg-surface-100 rounded-full overflow-hidden mt-2">
+                                <div className="h-full bg-primary-400 rounded-full"
+                                  style={{ width: `${(record.totalScore / focusCat.max) * 100}%` }} />
+                              </div>
+                            </div>
+                            <p className="px-3 py-1.5 text-[10px] text-surface-400 bg-surface-50 border-t border-surface-100">
+                              점수 재입력은 [점검 조회/입력]에서 진행하세요.
+                            </p>
                           </div>
-                        ))}
+                        )}
+                        {/* 특이사항 */}
                         <div>
-                          <label htmlFor={`m-notes-${record.id}`} className="block text-xs font-medium text-surface-500 mb-0.5">특이사항</label>
-                          <input id={`m-notes-${record.id}`} type="text"
-                            className="w-full px-3 py-2 text-sm border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-                            value={editForm.notes || ""} onChange={e => handleNotesChange(e.target.value)} />
+                          <label htmlFor={`m-notes-${record.id}`} className="block text-xs font-medium text-surface-500 mb-1">칭찬 및 지적사항</label>
+                          <textarea id={`m-notes-${record.id}`} rows={2}
+                            className="w-full px-3 py-2 text-sm border border-surface-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 resize-none"
+                            value={editForm.notes || ""} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} />
                         </div>
-                        <div className="flex gap-2 pt-1">
+                        <div className="flex gap-2">
                           <button onClick={() => saveEdit(record.id)}
-                            className={`flex-1 py-2.5 bg-primary-600 text-white rounded text-sm font-medium hover:bg-primary-700 ${focusRing}`}>저장</button>
+                            className={`flex-1 py-2.5 bg-primary-600 text-white rounded text-sm font-semibold hover:bg-primary-700 ${focusRing}`}>저장</button>
                           <button onClick={cancelEdit}
                             className={`flex-1 py-2.5 bg-surface-100 text-surface-700 rounded text-sm font-medium hover:bg-surface-200 ${focusRing}`}>취소</button>
                         </div>
@@ -806,7 +828,7 @@ export function DataManagement() {
                             <>
                               <label htmlFor={`td-insp-${record.id}`} className="sr-only">점검자</label>
                               <input id={`td-insp-${record.id}`} type="text"
-                                className="w-20 px-2 py-1 text-sm border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-24 px-2 py-1 text-sm border border-surface-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
                                 value={editForm.inspector || ""} onChange={e => setEditForm({ ...editForm, inspector: e.target.value })} />
                             </>
                           ) : record.inspector}
@@ -849,40 +871,30 @@ export function DataManagement() {
                           {showCategoryColumns ? null : "—"}
                         </td>
 
-                        {/* 카테고리 점수 열 */}
+                        {/* 카테고리 점수 열 — 편집 중에도 읽기 전용 표시 */}
                         {showCategoryColumns && categories.map(c => (
                           <td key={c.key} className="py-3 px-4 text-center" headers={`col-${c.key}`}>
-                            {isEditing ? (
-                              <>
-                                <label htmlFor={`td-${c.key}-${record.id}`} className="sr-only">{c.name} 점수</label>
-                                <input id={`td-${c.key}-${record.id}`} type="number" min="0" max="10"
-                                  className="w-12 px-1 py-1 text-center text-sm border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                  value={editForm.scores?.[c.key as keyof RecordDoc["scores"]]}
-                                  onChange={e => handleScoreChange(c.key as keyof RecordDoc["scores"], e.target.value)} />
-                              </>
-                            ) : (
-                              <span className={scoreBand(record.scores?.[c.key as keyof RecordDoc["scores"]], 10)}>
-                                {record.scores?.[c.key as keyof RecordDoc["scores"]] || 0}
-                              </span>
-                            )}
+                            <span className={scoreBand(record.scores?.[c.key as keyof RecordDoc["scores"]], 10)}>
+                              {record.scores?.[c.key as keyof RecordDoc["scores"]] || 0}
+                            </span>
                           </td>
                         ))}
 
                         <td className="py-3 px-4 text-center font-mono">
-                          <span className={scoreBand(isEditing ? editForm.totalScore : record.totalScore, scoreMaxForBand)}>
-                            {isEditing ? editForm.totalScore : record.totalScore}
+                          <span className={scoreBand(record.totalScore, scoreMaxForBand)}>
+                            {record.totalScore}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <StatusBadge status={isEditing ? editForm.status : record.status} />
+                          <StatusBadge status={record.status} />
                         </td>
                         <td className="py-3 px-4 whitespace-normal min-w-[220px] max-w-[320px]">
                           {isEditing ? (
                             <>
                               <label htmlFor={`td-notes-${record.id}`} className="sr-only">특이사항</label>
                               <input id={`td-notes-${record.id}`} type="text"
-                                className="w-full px-2 py-1 text-sm border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                value={editForm.notes || ""} onChange={e => handleNotesChange(e.target.value)} />
+                                className="w-full px-2 py-1 text-sm border border-surface-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                value={editForm.notes || ""} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} />
                             </>
                           ) : <span className="break-words text-sm text-surface-700">{record.notes}</span>}
                         </td>
