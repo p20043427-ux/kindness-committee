@@ -26,6 +26,7 @@ export function Schedule() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<{
     turn: 1 | 2;
     date: string;
@@ -137,8 +138,9 @@ export function Schedule() {
     // Extract YYYY-MM from date to ensure they match logically
     const monthStr = formData.date.slice(0, 7);
 
+    setIsSaving(true);
     try {
-      const id = editingId || Date.now().toString();
+      const id = editingId || crypto.randomUUID();
       const payload: any = {
         id,
         month: monthStr,
@@ -147,16 +149,17 @@ export function Schedule() {
         inspectors: formData.inspectors,
         note: formData.note,
       };
-      if (!editingId) {
-        payload.created_at = new Date().toISOString();
-      }
+      if (!editingId) payload.created_at = new Date().toISOString();
 
       const { error } = await supabase.from("kc_schedules").upsert(payload);
       if (error) throw error;
+      toast(editingId ? "스케줄이 수정되었습니다." : "스케줄이 추가되었습니다.", "success");
       resetForm();
     } catch (error) {
       console.error("Error saving schedule:", error);
-      toast(`저장 중 오류가 발생했습니다.`, "error");
+      toast("저장 중 오류가 발생했습니다.", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -178,7 +181,28 @@ export function Schedule() {
   const displaySchedules = schedules.filter(s => s.month === filterMonth);
 
   if (isLoading) {
-    return <div className="p-8 text-center text-surface-500">스케줄을 불러오는 중입니다...</div>;
+    return (
+      <div className="space-y-6 animate-in fade-in duration-300 max-w-5xl mx-auto">
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <div className="h-8 w-40 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+            <div className="h-4 w-64 bg-surface-100 rounded motion-safe:animate-pulse" />
+          </div>
+          <div className="h-10 w-28 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+        </div>
+        <div className="bg-white rounded-xl border border-surface-200 overflow-hidden divide-y divide-surface-100">
+          {[1,2,3].map(i => (
+            <div key={i} className="p-6 flex items-center gap-4">
+              <div className="h-14 w-20 bg-surface-100 rounded-lg motion-safe:animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-5 w-32 bg-surface-200 rounded motion-safe:animate-pulse" />
+                <div className="h-4 w-48 bg-surface-100 rounded motion-safe:animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -193,7 +217,7 @@ export function Schedule() {
             type="month"
             value={filterMonth}
             onChange={(e) => setFilterMonth(e.target.value)}
-            className="rounded-lg border-surface-300 text-surface-900 font-semibold focus:ring-primary-500 focus:border-primary-500"
+            className="border border-surface-300 rounded-lg px-3 py-2 text-surface-900 font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <button
             onClick={() => setIsFormOpen(true)}
@@ -240,14 +264,15 @@ export function Schedule() {
                       <button
                         key={member.id}
                         type="button"
+                        aria-pressed={isSelected}
                         onClick={() => toggleInspector(member.name)}
-                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
-                          isSelected 
-                            ? 'bg-primary-100 border-primary-500 text-primary-800 font-medium' 
+                        className={`px-3 py-1.5 text-sm rounded-full border transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                          isSelected
+                            ? 'bg-primary-100 border-primary-500 text-primary-800 font-medium'
                             : 'bg-white border-surface-300 text-surface-600 hover:bg-surface-50'
                         }`}
                       >
-                        {member.name} {member.department ? `(${member.department})` : ''}
+                        {member.name}{member.department ? ` (${member.department})` : ''}
                       </button>
                     );
                   })}
@@ -279,9 +304,10 @@ export function Schedule() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium transition-colors"
+                disabled={isSaving}
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
-                {editingId ? "수정완료" : "추가완료"}
+                {isSaving ? "저장 중..." : editingId ? "수정완료" : "추가완료"}
               </button>
             </div>
           </form>

@@ -24,7 +24,12 @@ function AppRoutes() {
   const { loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-surface-500">Loading...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 text-surface-500">
+        <div className="w-10 h-10 border-4 border-surface-200 border-t-primary-600 rounded-full animate-spin" role="status" aria-label="로딩 중" />
+        <span className="text-sm font-medium">시스템 연결 중...</span>
+      </div>
+    );
   }
 
   return (
