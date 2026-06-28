@@ -13,7 +13,7 @@ import { InlineInputForm } from "@/src/components/features/InlineInputForm";
 import { DatePickerWithData } from "@/src/components/features/DatePickerWithData";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
-import { Download } from "lucide-react";
+import { Download, CheckCircle2, AlertTriangle, AlertOctagon, Clock } from "lucide-react";
 
 interface RecordData {
   departmentId: string;
@@ -199,14 +199,14 @@ export function Monitoring() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch(status) {
-      case "정상": return "✅";
-      case "주의": return "⚠️";
-      case "긴급": return "🚨";
-      default: return "⏳";
+  const StatusIcon = ({ status }: { status: string }) => {
+    switch (status) {
+      case "정상": return <CheckCircle2 className="w-5 h-5 text-primary-500" aria-label="정상" />;
+      case "주의": return <AlertTriangle className="w-5 h-5 text-amber-500" aria-label="주의" />;
+      case "긴급": return <AlertOctagon className="w-5 h-5 text-red-500" aria-label="긴급" />;
+      default:     return <Clock className="w-5 h-5 text-surface-400" aria-label="미점검" />;
     }
-  }
+  };
 
   const handleSuccess = () => {
     setExpandedDeptId(null);
@@ -272,9 +272,9 @@ export function Monitoring() {
               <button
                 key={b.id}
                 onClick={() => setMobileActiveBuildingId(b.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  mobileActiveBuildingId === b.id 
-                    ? 'bg-surface-900 text-white shadow-sm' 
+                className={`flex-shrink-0 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                  mobileActiveBuildingId === b.id
+                    ? 'bg-surface-900 text-white'
                     : 'bg-white border border-surface-200 text-surface-600 hover:bg-surface-50'
                 }`}
               >
@@ -287,8 +287,8 @@ export function Monitoring() {
             {buildings.map(building => {
               const bDepts = departments.filter(d => d.buildingId === building.id);
               return (
-                <Card key={building.id} className={`flex-col h-full bg-surface-50/50 shadow-sm border-surface-200 ${mobileActiveBuildingId === building.id ? 'flex' : 'hidden lg:flex'}`}>
-                <CardHeader className="pb-3 border-b border-surface-100 bg-white rounded-t-xl">
+                <Card key={building.id} className={`flex-col h-full bg-surface-50/50 border-surface-200 ${mobileActiveBuildingId === building.id ? 'flex' : 'hidden lg:flex'}`}>
+                <CardHeader className="pb-3 border-b border-surface-100 bg-white">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{building.name}</CardTitle>
                     <Badge variant="outline" className="bg-surface-50">{bDepts.length}개 부서</Badge>
@@ -306,7 +306,7 @@ export function Monitoring() {
                         <div key={dept.id} className="flex flex-col">
                           <div
                             onClick={() => setExpandedDeptId(isExpanded ? null : dept.id)}
-                            className={`p-3 rounded-lg border transition-all ${getStatusColor(status)} flex items-center justify-between bg-white bg-opacity-70 backdrop-blur-sm cursor-pointer hover:shadow-sm`}
+                            className={`p-3 rounded border transition-all ${getStatusColor(status)} flex items-center justify-between bg-white bg-opacity-70 backdrop-blur-sm cursor-pointer`}
                           >
                             <div className="flex flex-col flex-1 min-w-0">
                               <span className="font-semibold text-sm break-keep">{dept.name}</span>
@@ -332,7 +332,7 @@ export function Monitoring() {
                               <span className="text-xs font-medium px-2 py-1 bg-white/50 rounded-md whitespace-nowrap">
                                 {status}
                               </span>
-                              <span className="text-lg">{getStatusIcon(status)}</span>
+                              <StatusIcon status={status} />
                             </div>
                           </div>
                           

@@ -125,12 +125,12 @@ export interface CategoryScores {
   environment: number;
 }
 
-/** 친절 점검 점수 → 상태 판정 (총 50점 만점 기준). 통합 로직. */
-export function computeStatus(scores: CategoryScores, notes: string): '정상' | '주의' | '긴급' {
+/** 친절 점검 점수 → 상태 판정 (총 50점 만점 기준). 점수만 기준. */
+export function computeStatus(scores: CategoryScores, _notes?: string): '정상' | '주의' | '긴급' {
   const vals = [scores.greeting, scores.response, scores.phone, scores.appearance, scores.environment];
   const total = vals.reduce((a, b) => a + (b || 0), 0);
   const minScore = Math.min(...vals.map((v) => v || 0));
   if (total < 30 || minScore <= 4) return '긴급';
-  if (total < 40 || (notes && notes.trim().length > 1)) return '주의';
+  if (total < 40) return '주의';
   return '정상';
 }

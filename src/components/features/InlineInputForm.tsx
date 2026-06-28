@@ -6,6 +6,8 @@ import { useAuth } from "@/src/components/auth/AuthProvider";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { useSettings } from "@/src/components/layout/SettingsProvider";
 import { useToast } from "@/src/components/ui/Toast";
+import { Button } from "@/src/components/ui/Button";
+import { Select } from "@/src/components/ui/Input";
 
 interface InlineInputFormProps {
   buildingId: string;
@@ -23,10 +25,10 @@ interface InlineInputFormProps {
 
 const zeroScores: CategoryScores = { greeting: 0, response: 0, phone: 0, appearance: 0, environment: 0 };
 
-/** 중점사항 점수(0~10) 기준 상태 판정 */
-function focusStatus(score: number, notes: string): '정상' | '주의' | '긴급' {
+/** 점수만 기준으로 상태 판정 — notes 여부는 상태에 영향 없음 */
+function focusStatus(score: number): '정상' | '주의' | '긴급' {
   if (score <= 4) return '긴급';
-  if (score < 8 || (notes && notes.trim().length > 0)) return '주의';
+  if (score < 8)  return '주의';
   return '정상';
 }
 
@@ -53,10 +55,8 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
     if (auto && !focusCategory) setFocusCategory(auto);
   }, [defaultFocus, monthFocus]);
 
-  // 세부항목 점수: "categoryKey_subKey" → 점수 (기존 데이터 있으면 그걸로 초기화)
   const [subScores, setSubScores] = useState<Record<string, number>>(defaultSubScores ?? {});
 
-  // 중점사항 카테고리가 바뀌면 없는 항목만 만점으로 채움
   useEffect(() => {
     if (!focusCategory) return;
     const cat = categories.find(c => c.key === focusCategory);
@@ -74,7 +74,6 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
   const setSubScore = (catKey: string, subKey: string, value: number) =>
     setSubScores(prev => ({ ...prev, [`${catKey}_${subKey}`]: value }));
 
-  // 현재 중점사항 카테고리의 점수 합산
   const getFocusScore = (): number => {
     if (!focusCategory) return 0;
     const cat = categories.find(c => c.key === focusCategory);
@@ -104,11 +103,10 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
     try {
       const deptName = departments.find(d => d.id === departmentId)?.name || "";
       const scores: CategoryScores = { ...zeroScores, [focusCategory]: focusScore };
-      const status = focusStatus(focusScore, notes);
+      const status = focusStatus(focusScore);
       const inspectionDateIso = inspectionDate + "T09:00:00Z";
       const nowIso = new Date().toISOString();
 
-      // 같은 부서+점검일 레코드가 있으면 UPDATE, 없으면 INSERT
       const { data: existing } = await supabase
         .from("kc_records")
         .select("id")
@@ -160,22 +158,28 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
   };
 
   const focusCat = focusCategory ? categories.find(c => c.key === focusCategory) : null;
+  const statusLabel = focusStatus(focusScore);
+  const statusClass =
+    statusLabel === "정상" ? "text-green-700 bg-green-50 border-green-200" :
+    statusLabel === "주의" ? "text-amber-700 bg-amber-50 border-amber-200" :
+                             "text-red-700 bg-red-50 border-red-200";
 
   return (
-    <form onSubmit={handleSubmit} className="mt-3 p-4 bg-surface-50 border border-surface-200 rounded-xl space-y-4">
-      <div className="text-sm font-bold text-surface-900 border-b border-surface-200 pb-2">친절점검표 입력 ({inspectionDate})</div>
+    <form onSubmit={handleSubmit} className="mt-3 p-4 bg-surface-50 border border-surface-200 rounded space-y-4">
+      <div className="text-xs font-bold uppercase tracking-widest text-surface-500 border-b border-surface-200 pb-2">
+        친절점검표 입력 ({inspectionDate})
+      </div>
 
       {errorMessage && (
-        <div className="p-3 my-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+        <div className="p-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded">
           {errorMessage}
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-        <div className="space-y-2">
-          <label className="font-medium text-surface-700">점검자 성명</label>
-          <select
-            className="w-full rounded-md border border-surface-300 px-3 py-2 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white"
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-surface-600">점검자 성명</label>
+          <Select
             value={inspector}
             onChange={(e) => setInspector(e.target.value)}
           >
@@ -183,12 +187,11 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
             {members.map(m => (
               <option key={m.id} value={m.name}>{m.name}</option>
             ))}
-          </select>
+          </Select>
         </div>
-        <div className="space-y-2">
-          <label className="font-medium text-surface-700">이번 달 중점사항</label>
-          <select
-            className="w-full rounded-md border border-surface-300 px-3 py-2 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white"
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-surface-600">이번 달 중점사항</label>
+          <Select
             value={focusCategory}
             onChange={(e) => setFocusCategory(e.target.value)}
           >
@@ -198,26 +201,26 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
                 {c.name}{monthFocus === c.key ? " (이번 달 중점)" : ""}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 
       {/* 중점사항 미선택 안내 */}
       {!focusCat && (
-        <div className="py-6 text-center text-sm text-surface-400">
+        <div className="py-5 text-center text-xs text-surface-400">
           이번 달 중점사항을 선택하면 평가 항목이 표시됩니다.
         </div>
       )}
 
       {/* 중점사항 카테고리 세부항목 */}
       {focusCat && (
-        <div className="rounded-xl p-4 bg-primary-50 border border-primary-200 space-y-4">
+        <div className="rounded p-4 bg-primary-50 border border-primary-200 space-y-4">
           <div className="flex items-baseline justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-surface-800">{focusCat.name}</span>
               <span className="text-[10px] font-bold text-primary-600 bg-primary-100 px-1.5 py-0.5 rounded">중점사항</span>
             </div>
-            <span className="text-sm font-bold text-primary-600 font-mono">{focusScore} / {focusCat.max}</span>
+            <span className="text-sm font-bold text-primary-600 font-mono tabular-nums">{focusScore} / {focusCat.max}</span>
           </div>
 
           <div className="space-y-4">
@@ -236,7 +239,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
                         type="button"
                         onClick={() => setSubScore(focusCat.key, sub.key, Math.max(0, val - 1))}
                         aria-label={`${sub.name} 점수 감소`}
-                        className="w-10 h-10 rounded-lg border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 active:bg-surface-200 font-bold flex items-center justify-center text-lg transition-colors"
+                        className="w-10 h-10 rounded border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 active:bg-surface-200 font-bold flex items-center justify-center text-lg transition-colors"
                       >−</button>
                       <span
                         className="font-mono font-bold text-sm w-14 text-center tabular-nums"
@@ -247,7 +250,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
                         type="button"
                         onClick={() => setSubScore(focusCat.key, sub.key, Math.min(sub.max, val + 1))}
                         aria-label={`${sub.name} 점수 증가`}
-                        className="w-10 h-10 rounded-lg border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 active:bg-surface-200 font-bold flex items-center justify-center text-lg transition-colors"
+                        className="w-10 h-10 rounded border border-surface-300 bg-white text-surface-700 hover:bg-surface-100 active:bg-surface-200 font-bold flex items-center justify-center text-lg transition-colors"
                       >+</button>
                     </div>
                   </div>
@@ -267,7 +270,7 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
           <div className="pt-1 border-t border-primary-200">
             <div className="flex justify-between text-xs text-primary-700 font-semibold mb-1">
               <span>소계</span>
-              <span className="font-mono">{focusScore} / {focusCat.max}점</span>
+              <span className="font-mono tabular-nums">{focusScore} / {focusCat.max}점</span>
             </div>
             <div className="h-1.5 bg-primary-100 rounded-full overflow-hidden">
               <div
@@ -279,28 +282,35 @@ export function InlineInputForm({ buildingId, departmentId, inspectionDate, defa
         </div>
       )}
 
-      <div className="space-y-2 text-sm">
-        <label className="font-medium text-surface-700">칭찬 및 지적사항 (특이사항)</label>
+      <div className="space-y-1 text-sm">
+        <label className="block text-xs font-medium text-surface-600">칭찬 및 지적사항 (특이사항)</label>
         <textarea
           rows={2}
-          className="w-full rounded-md border border-surface-300 p-2 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white resize-none"
-          placeholder="만점 또는 지적 시 사유를 꼭 기록해 주세요."
+          className="w-full rounded border border-surface-300 p-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white resize-none text-surface-900 placeholder:text-surface-400"
+          placeholder="특이사항을 기록해 주세요."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
       </div>
 
-      <div className="flex items-center justify-between pt-2">
-        <span className="text-sm font-bold text-surface-700">
-          총점 <span className="text-primary-600 font-mono">{focusScore}</span> / {focusCat?.max ?? 10}
-        </span>
-        <div className="flex space-x-2">
-          <button type="button" onClick={onCancel} className="px-3 py-1.5 rounded-lg border border-surface-300 text-surface-700 font-medium text-sm hover:bg-surface-100 transition-colors" disabled={isSubmitting}>
+      <div className="flex items-center justify-between pt-1 border-t border-surface-200">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-surface-700">
+            총점 <span className="text-primary-600 font-mono tabular-nums">{focusScore}</span> / {focusCat?.max ?? 10}
+          </span>
+          {focusCat && (
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${statusClass}`}>
+              {statusLabel}
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button type="button" variant="secondary" size="md" onClick={onCancel} disabled={isSubmitting}>
             취소
-          </button>
-          <button type="submit" disabled={isSubmitting} className="px-3 py-1.5 rounded-lg bg-surface-900 text-white font-medium text-sm hover:bg-surface-800 transition-colors disabled:opacity-50">
-            {isSubmitting ? "전송 중..." : "등록 🚀"}
-          </button>
+          </Button>
+          <Button type="submit" variant="primary" size="md" isLoading={isSubmitting}>
+            {isEditing ? "수정완료" : "등록"}
+          </Button>
         </div>
       </div>
     </form>

@@ -11,6 +11,8 @@ import {
   ArrowUp, ArrowDown, ChevronRight, ChevronLeft,
   FileSpreadsheet, Loader2,
 } from "lucide-react";
+import { PageHeader } from "@/src/components/ui/PageHeader";
+import { Button } from "@/src/components/ui/Button";
 import { SkeletonTableRows } from "@/src/components/ui/Skeleton";
 import { downloadExcel } from "@/src/lib/excel";
 import { scoreBand } from "@/src/lib/designTokens";
@@ -445,7 +447,7 @@ export function DataManagement() {
   const focusRing = "focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary-500";
 
   const StatusBadge = ({ status }: { status?: string }) => (
-    <span className={`px-2 py-1 text-xs font-semibold rounded-md ${
+    <span className={`px-2 py-1 text-xs font-semibold rounded ${
       status === "정상" ? "bg-green-100 text-green-700" :
       status === "주의" ? "bg-orange-100 text-orange-700" :
                           "bg-red-100 text-red-700"
@@ -464,13 +466,13 @@ export function DataManagement() {
           <div className="h-10 w-28 bg-surface-100 rounded-t motion-safe:animate-pulse" />
           <div className="h-10 w-36 bg-surface-100 rounded-t motion-safe:animate-pulse" />
         </div>
-        <div className="bg-surface-50 p-4 rounded-xl border border-surface-200 space-y-3">
+        <div className="bg-surface-50 p-4 rounded border border-surface-200 space-y-3">
           <div className="flex gap-2">
-            <div className="h-9 w-28 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
-            <div className="h-9 w-36 bg-surface-200 rounded-lg motion-safe:animate-pulse" />
+            <div className="h-9 w-28 bg-surface-200 rounded motion-safe:animate-pulse" />
+            <div className="h-9 w-36 bg-surface-200 rounded motion-safe:animate-pulse" />
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-surface-200 overflow-hidden">
+        <div className="bg-white rounded border border-surface-200 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-surface-50 border-b border-surface-200">
               <tr>
@@ -489,10 +491,10 @@ export function DataManagement() {
   /* ══════════════════════════════════════════════════════════════════════ */
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-surface-900 border-l-4 border-primary-500 pl-3">점검 데이터 관리</h1>
-        <p className="text-surface-500 text-sm mt-1">상세 점검 내역을 관리하고 연간/월별 점수표를 확인하세요.</p>
-      </div>
+      <PageHeader
+        title="점검 데이터 관리"
+        description="상세 점검 내역을 관리하고 연간/월별 점수표를 확인하세요."
+      />
 
       {/* ── 탭 ── */}
       <div role="tablist" aria-label="데이터 보기 방식" className="flex space-x-1 border-b border-surface-200">
@@ -523,13 +525,13 @@ export function DataManagement() {
         <div id="panel-raw" role="tabpanel" aria-labelledby="tab-raw" className="space-y-4">
 
           {/* 필터 바 */}
-          <div className="flex flex-col gap-3 bg-surface-50 p-4 rounded-xl border border-surface-200">
+          <div className="flex flex-col gap-3 bg-surface-50 p-4 rounded border border-surface-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="flex items-center flex-wrap gap-2">
                 <label htmlFor="filter-type" className="sr-only">조회 방식</label>
                 <select id="filter-type" value={filterType}
                   onChange={e => updateParams({ type: e.target.value, page: "0" })}
-                  className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium">
+                  className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700 font-medium">
                   <option value="month">월간 조회</option>
                   <option value="range">기간 조회</option>
                 </select>
@@ -539,10 +541,10 @@ export function DataManagement() {
                     <label htmlFor="filter-month" className="sr-only">조회 월</label>
                     <input id="filter-month" type="month" value={filterMonth}
                       onChange={e => updateParams({ month: e.target.value, page: "0" })}
-                      className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium" />
+                      className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900 font-medium" />
                     {[{ label: "이번 달", value: currentYearMonth }, { label: "지난 달", value: prevYearMonth }].map(p => (
                       <button key={p.label} onClick={() => updateParams({ month: p.value, page: "0" })}
-                        className={`text-xs px-2.5 py-1.5 rounded-full border transition-colors ${filterMonth === p.value ? "bg-primary-600 text-white border-primary-600" : "bg-white border-surface-300 text-surface-600 hover:bg-surface-50"}`}>
+                        className={`text-xs px-2.5 py-1.5 rounded border transition-colors ${filterMonth === p.value ? "bg-primary-600 text-white border-primary-600" : "bg-white border-surface-300 text-surface-600 hover:bg-surface-50"}`}>
                         {p.label}
                       </button>
                     ))}
@@ -552,12 +554,12 @@ export function DataManagement() {
                     <label htmlFor="start-date" className="sr-only">시작일</label>
                     <input id="start-date" type="date" value={startDateLocal}
                       onChange={e => setStartDateLocal(e.target.value)}
-                      className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900" />
+                      className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900" />
                     <span aria-hidden className="text-surface-500">~</span>
                     <label htmlFor="end-date" className="sr-only">종료일</label>
                     <input id="end-date" type="date" value={endDateLocal}
                       onChange={e => setEndDateLocal(e.target.value)}
-                      className="bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900" />
+                      className="bg-white border border-surface-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-900" />
                   </div>
                 )}
               </div>
@@ -566,12 +568,12 @@ export function DataManagement() {
               <div className="flex items-center gap-2">
                 <button onClick={exportRawCSV} disabled={isExporting}
                   aria-label="현재 데이터를 CSV로 내보내기"
-                  className={`flex items-center gap-2 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`}>
+                  className={`flex items-center gap-2 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${focusRing}`}>
                   <Download className="w-4 h-4" aria-hidden />CSV
                 </button>
                 <button onClick={exportRawXLSX} disabled={isExporting}
                   aria-label="현재 데이터를 Excel로 내보내기"
-                  className={`flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-500`}>
+                  className={`flex items-center gap-2 px-3 py-2 bg-surface-700 hover:bg-surface-800 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-surface-500`}>
                   {isExporting
                     ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
                     : <FileSpreadsheet className="w-4 h-4" aria-hidden />}
@@ -586,14 +588,14 @@ export function DataManagement() {
               <label htmlFor="filter-building" className="sr-only">건물 필터</label>
               <select id="filter-building" value={filterBuildingId}
                 onChange={e => handleBuildingFilterChange(e.target.value)}
-                className="bg-white border border-surface-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
+                className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
                 <option value="">전체 건물</option>
                 {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
               <label htmlFor="filter-dept" className="sr-only">부서 필터</label>
               <select id="filter-dept" value={filterDepartmentId}
                 onChange={e => updateParams({ dept: e.target.value, page: "0" })}
-                className="bg-white border border-surface-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
+                className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
                 <option value="">전체 부서</option>
                 {(filterBuildingId ? departments.filter(d => d.buildingId === filterBuildingId) : departments)
                   .map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -603,7 +605,7 @@ export function DataManagement() {
                   <label htmlFor="filter-inspector" className="sr-only">점검자 필터</label>
                   <select id="filter-inspector" value={filterInspector}
                     onChange={e => updateParams({ inspector: e.target.value, page: "0" })}
-                    className="bg-white border border-surface-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
+                    className="bg-white border border-surface-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-surface-700">
                     <option value="">전체 점검자</option>
                     {inspectorOptions.map(name => <option key={name} value={name}>{name}</option>)}
                   </select>
@@ -629,7 +631,7 @@ export function DataManagement() {
               const isEditing = editingId === record.id;
               const focusCat  = record.focusCategory ? categories.find(c => c.key === record.focusCategory) : null;
               return (
-                <div key={`m-${record.id}`} className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+                <div key={`m-${record.id}`} className="bg-white rounded border border-surface-200 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-2.5 bg-surface-50 border-b border-surface-100">
                     <div className="flex items-center gap-2 text-xs text-surface-500">
                       <span className="font-mono">{record.date.split("T")[0]}</span>
@@ -650,14 +652,14 @@ export function DataManagement() {
                         <div>
                           <label htmlFor={`m-insp-${record.id}`} className="block text-xs font-medium text-surface-500 mb-0.5">점검자</label>
                           <input id={`m-insp-${record.id}`} type="text"
-                            className="w-full px-3 py-2 text-sm border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full px-3 py-2 text-sm border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
                             value={editForm.inspector || ""} onChange={e => setEditForm({ ...editForm, inspector: e.target.value })} />
                         </div>
                         {categories.map(c => (
                           <div key={c.key} className="flex items-center justify-between">
                             <label htmlFor={`m-${c.key}-${record.id}`} className="text-sm text-surface-600">{c.name}</label>
                             <input id={`m-${c.key}-${record.id}`} type="number" min="0" max="10"
-                              className="w-16 px-2 py-1.5 text-center text-sm border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              className="w-16 px-2 py-1.5 text-center text-sm border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
                               value={editForm.scores?.[c.key as keyof RecordDoc["scores"]] ?? 0}
                               onChange={e => handleScoreChange(c.key as keyof RecordDoc["scores"], e.target.value)} />
                           </div>
@@ -665,26 +667,26 @@ export function DataManagement() {
                         <div>
                           <label htmlFor={`m-notes-${record.id}`} className="block text-xs font-medium text-surface-500 mb-0.5">특이사항</label>
                           <input id={`m-notes-${record.id}`} type="text"
-                            className="w-full px-3 py-2 text-sm border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full px-3 py-2 text-sm border border-surface-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
                             value={editForm.notes || ""} onChange={e => handleNotesChange(e.target.value)} />
                         </div>
                         <div className="flex gap-2 pt-1">
                           <button onClick={() => saveEdit(record.id)}
-                            className={`flex-1 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 ${focusRing}`}>저장</button>
+                            className={`flex-1 py-2.5 bg-primary-600 text-white rounded text-sm font-medium hover:bg-primary-700 ${focusRing}`}>저장</button>
                           <button onClick={cancelEdit}
-                            className={`flex-1 py-2.5 bg-surface-100 text-surface-700 rounded-lg text-sm font-medium hover:bg-surface-200 ${focusRing}`}>취소</button>
+                            className={`flex-1 py-2.5 bg-surface-100 text-surface-700 rounded text-sm font-medium hover:bg-surface-200 ${focusRing}`}>취소</button>
                         </div>
                       </div>
                     ) : (
                       <>
                         <p className="text-sm text-surface-600">점검자: <span className="font-medium text-surface-900">{record.inspector || "—"}</span></p>
                         {focusCat && (
-                          <p className="text-xs text-teal-700 bg-teal-50 border border-teal-100 rounded-md px-2 py-1">
+                          <p className="text-xs text-teal-700 bg-teal-50 border border-teal-100 rounded px-2 py-1">
                             중점: {focusCat.name} · {record.totalScore}/{focusCat.max}점
                           </p>
                         )}
                         {record.notes && (
-                          <p className="text-sm text-surface-600 bg-surface-50 rounded-md px-3 py-2 break-words">{record.notes}</p>
+                          <p className="text-sm text-surface-600 bg-surface-50 rounded px-3 py-2 break-words">{record.notes}</p>
                         )}
                         <div className="flex gap-2 pt-1">
                           {pendingDeleteId === record.id ? (
@@ -692,18 +694,18 @@ export function DataManagement() {
                               <span className="text-xs text-surface-500 self-center mr-1" role="status">삭제할까요?</span>
                               <button onClick={() => softDeleteRecord(record.id)}
                                 aria-label={`${record.departmentName} 점검 기록 삭제 확인`}
-                                className={`flex-1 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500`}>확인</button>
+                                className={`flex-1 py-2.5 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500`}>확인</button>
                               <button onClick={() => setPendingDeleteId(null)}
-                                className={`flex-1 py-2.5 bg-surface-100 text-surface-700 rounded-lg text-sm font-medium hover:bg-surface-200 ${focusRing}`}>취소</button>
+                                className={`flex-1 py-2.5 bg-surface-100 text-surface-700 rounded text-sm font-medium hover:bg-surface-200 ${focusRing}`}>취소</button>
                             </>
                           ) : (
                             <>
                               <button onClick={() => startEdit(record)}
                                 aria-label={`${record.departmentName} 점검 기록 수정`}
-                                className={`flex-1 py-2.5 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg text-sm font-medium hover:bg-primary-100 ${focusRing}`}>수정</button>
+                                className={`flex-1 py-2.5 bg-primary-50 text-primary-700 border border-primary-200 rounded text-sm font-medium hover:bg-primary-100 ${focusRing}`}>수정</button>
                               <button onClick={() => setPendingDeleteId(record.id)}
                                 aria-label={`${record.departmentName} 점검 기록 삭제`}
-                                className={`flex-1 py-2.5 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400`}>삭제</button>
+                                className={`flex-1 py-2.5 bg-red-50 text-red-700 border border-red-200 rounded text-sm font-medium hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400`}>삭제</button>
                             </>
                           )}
                         </div>
@@ -716,7 +718,7 @@ export function DataManagement() {
           </div>
 
           {/* ── 데스크탑 테이블 ────────────────────────────────────────── */}
-          <div className="hidden sm:block bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+          <div className="hidden sm:block bg-white rounded border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200 sticky top-0 z-10">
@@ -799,9 +801,9 @@ export function DataManagement() {
                         {/* 중점사항 */}
                         <td className="py-3 px-4 bg-teal-50/40 min-w-[180px]">
                           {focusCat ? (
-                            <div className={`rounded-lg px-2.5 py-2 space-y-1.5 ${hasSubScores ? "bg-teal-50 border border-teal-100" : "bg-amber-50 border border-amber-200"}`}>
+                            <div className={`rounded px-2.5 py-2 space-y-1.5 ${hasSubScores ? "bg-teal-50 border border-teal-100" : "bg-amber-50 border border-amber-200"}`}>
                               <div className="flex items-center gap-1.5">
-                                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-100 text-teal-700 whitespace-nowrap">{focusCat.name}</span>
+                                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-teal-100 text-teal-700 whitespace-nowrap">{focusCat.name}</span>
                                 <span className={`text-xs font-bold font-mono whitespace-nowrap ${hasSubScores ? "text-teal-800" : "text-amber-700"}`}>
                                   {record.totalScore}/{focusCat.max}점
                                 </span>
@@ -915,7 +917,7 @@ export function DataManagement() {
               <nav aria-label="페이지 탐색" className="flex items-center gap-1">
                 <button onClick={() => updateParams({ page: String(safePage - 1) })}
                   disabled={safePage === 0} aria-label="이전 페이지"
-                  className={`p-2 rounded-lg border border-surface-200 text-surface-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}>
+                  className={`p-2 rounded border border-surface-200 text-surface-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}>
                   <ChevronLeft className="w-4 h-4" aria-hidden />
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i)
@@ -923,7 +925,7 @@ export function DataManagement() {
                   .map(i => (
                     <button key={i} onClick={() => updateParams({ page: String(i) })}
                       aria-label={`${i + 1}페이지`} aria-current={safePage === i ? "page" : undefined}
-                      className={`w-8 h-8 rounded-lg text-xs font-medium ${focusRing} ${
+                      className={`w-8 h-8 rounded text-xs font-medium ${focusRing} ${
                         safePage === i
                           ? "bg-primary-600 text-white"
                           : "border border-surface-200 text-surface-600 hover:bg-surface-100"
@@ -931,7 +933,7 @@ export function DataManagement() {
                   ))}
                 <button onClick={() => updateParams({ page: String(safePage + 1) })}
                   disabled={safePage >= totalPages - 1} aria-label="다음 페이지"
-                  className={`p-2 rounded-lg border border-surface-200 text-surface-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}>
+                  className={`p-2 rounded border border-surface-200 text-surface-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}>
                   <ChevronRight className="w-4 h-4" aria-hidden />
                 </button>
               </nav>
@@ -942,12 +944,12 @@ export function DataManagement() {
       /* ════════════════ AGGREGATE 탭 ════════════════ */
       ) : (
         <div id="panel-aggregate" role="tabpanel" aria-labelledby="tab-aggregate" className="space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-50 p-4 rounded-xl border border-surface-200">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-50 p-4 rounded border border-surface-200">
             <div className="flex items-center gap-3">
               <label htmlFor="filter-year" className="text-sm font-semibold text-surface-700">조회 연도</label>
               <select id="filter-year" value={filterYear}
                 onChange={e => updateParams({ year: e.target.value })}
-                className="bg-white border border-surface-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-bold">
+                className="bg-white border border-surface-300 rounded px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-bold">
                 {Array.from({ length: 5 }).map((_, i) => {
                   const y = (new Date().getFullYear() - 2 + i).toString();
                   return <option key={y} value={y}>{y}년</option>;
@@ -957,19 +959,19 @@ export function DataManagement() {
             <div className="flex items-center gap-2">
               <button onClick={exportAggregateCSV} disabled={isExporting}
                 aria-label="집계 데이터를 CSV로 내보내기"
-                className={`flex items-center gap-2 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${focusRing}`}>
+                className={`flex items-center gap-2 px-3 py-2 bg-white border border-surface-300 hover:bg-surface-50 text-surface-700 text-sm font-medium rounded transition-colors disabled:opacity-50 ${focusRing}`}>
                 <Download className="w-4 h-4" aria-hidden />CSV
               </button>
               <button onClick={exportAggregateXLSX} disabled={isExporting}
                 aria-label="집계 데이터를 Excel로 내보내기"
-                className={`flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-500`}>
+                className={`flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-500`}>
                 {isExporting ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <FileSpreadsheet className="w-4 h-4" aria-hidden />}
                 Excel
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+          <div className="bg-white rounded border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200 sticky top-0 z-10">

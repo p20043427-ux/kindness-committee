@@ -132,8 +132,8 @@ export function Dashboard() {
             <div className="flex items-baseline gap-2 mt-2">
               <p className="text-2xl font-bold text-surface-900 font-mono tabular-nums">{kpi.curCount}<span className="text-sm text-surface-400 ml-1 font-sans font-normal">건</span></p>
               {kpi.prevCount > 0 && (
-                <span className={`text-xs font-semibold ${kpi.curCount >= kpi.prevCount ? "text-green-600" : "text-amber-600"}`}>
-                  {kpi.curCount >= kpi.prevCount ? "▲" : "▼"} {Math.abs(kpi.curCount - kpi.prevCount)} vs 지난달
+                <span className={`text-xs font-semibold whitespace-nowrap ${kpi.curCount >= kpi.prevCount ? "text-green-600" : "text-amber-600"}`}>
+                  {kpi.curCount >= kpi.prevCount ? "▲" : "▼"}&thinsp;{Math.abs(kpi.curCount - kpi.prevCount)} vs 지난달
                 </span>
               )}
             </div>
@@ -143,8 +143,8 @@ export function Dashboard() {
             <div className="flex items-baseline gap-2 mt-2">
               <p className="text-2xl font-bold text-primary-600 font-mono tabular-nums">{kpi.curAvg ?? "—"}<span className="text-sm text-surface-400 ml-1 font-sans font-normal">점</span></p>
               {kpi.prevAvg !== null && kpi.curAvg !== null && (
-                <span className={`text-xs font-semibold ${kpi.curAvg >= kpi.prevAvg ? "text-green-600" : "text-red-500"}`}>
-                  {kpi.curAvg >= kpi.prevAvg ? "▲" : "▼"} {Math.abs(Math.round((kpi.curAvg - kpi.prevAvg) * 10) / 10)} vs 지난달
+                <span className={`text-xs font-semibold whitespace-nowrap ${kpi.curAvg >= kpi.prevAvg ? "text-green-600" : "text-red-500"}`}>
+                  {kpi.curAvg >= kpi.prevAvg ? "▲" : "▼"}&thinsp;{Math.abs(Math.round((kpi.curAvg - kpi.prevAvg) * 10) / 10)} vs 지난달
                 </span>
               )}
             </div>
