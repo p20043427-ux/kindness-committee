@@ -368,29 +368,25 @@ export function DataManagement() {
   const startEdit  = (r: RecordDoc) => { setEditingId(r.id); setEditForm({ ...r }); };
   const cancelEdit = () => { setEditingId(null); setEditForm({}); };
 
-  const emptyScores: CategoryScores = { greeting: 0, response: 0, phone: 0, appearance: 0, environment: 0 };
-
-  const handleScoreChange = (type: keyof RecordDoc["scores"], value: string) => {
-    const clamped = Math.min(Math.max(parseInt(value) || 0, 0), 10);
-    setEditForm(prev => {
-      const s = { ...emptyScores, ...prev.scores, [type]: clamped } as CategoryScores;
-      return { ...prev, scores: s, totalScore: Object.values(s).reduce((a, b) => a + b, 0), status: computeStatus(s, prev.notes || "") };
-    });
-  };
-
-  const handleNotesChange = (value: string) =>
-    setEditForm(prev => ({
-      ...prev, notes: value,
-      status: computeStatus({ ...emptyScores, ...prev.scores } as CategoryScores, value),
-    }));
+  const updateSubScore = (key: string, val: number) =>
+    setEditForm(prev => ({ ...prev, subScores: { ...prev.subScores, [key]: val } }));
 
   const saveEdit = async (id: string) => {
     if (!id) return;
     try {
+      const focusCat = editForm.focusCategory
+        ? categories.find(c => c.key === editForm.focusCategory) : null;
+      const newTotal = focusCat && editForm.subScores
+        ? focusCat.subCriteria.reduce((sum, sub) =>
+            sum + (editForm.subScores![`${focusCat.key}_${sub.key}`] ?? 0), 0)
+        : (editForm.totalScore ?? 0);
+
       const { error } = await supabase.from("kc_records").update({
-        inspector:  editForm.inspector,
-        notes:      editForm.notes,
-        updated_at: new Date().toISOString(),
+        inspector:   editForm.inspector,
+        notes:       editForm.notes,
+        total_score: newTotal,
+        sub_scores:  editForm.subScores ?? null,
+        updated_at:  new Date().toISOString(),
       }).eq("id", id);
       if (error) throw error;
       setEditingId(null);
@@ -668,35 +664,35 @@ export function DataManagement() {
                             className="w-full px-3 py-2 text-sm border border-surface-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
                             value={editForm.inspector || ""} onChange={e => setEditForm({ ...editForm, inspector: e.target.value })} />
                         </div>
-                        {/* 중점사항 점수 — 읽기 전용 */}
+                        {/* 중점사항 점수 편집 */}
                         {focusCat && (
                           <div className="rounded border border-surface-200 overflow-hidden">
                             <div className="bg-surface-50 px-3 py-2 flex items-center justify-between border-b border-surface-100">
-                              <span className="text-xs font-bold text-surface-600">중점사항 점수</span>
-                              <span className="text-xs font-mono font-bold text-primary-600">{record.totalScore}/{focusCat.max}점</span>
+                              <span className="text-xs font-semibold text-surface-600">{focusCat.name}</span>
+                              <span className="text-xs font-mono font-bold text-primary-600">
+                                {focusCat.subCriteria.reduce((s, sub) =>
+                                  s + (editForm.subScores?.[`${focusCat.key}_${sub.key}`] ?? 0), 0)}/{focusCat.max}점
+                              </span>
                             </div>
-                            <div className="px-3 py-2 space-y-1.5">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold text-surface-700">{focusCat.name}</span>
-                                <StatusBadge status={record.status} />
-                              </div>
-                              {record.subScores && focusCat.subCriteria.map(sub => {
-                                const val = record.subScores![`${focusCat.key}_${sub.key}`];
+                            <div className="px-3 py-2 space-y-2">
+                              {focusCat.subCriteria.map(sub => {
+                                const scoreKey = `${focusCat.key}_${sub.key}`;
+                                const val = editForm.subScores?.[scoreKey] ?? record.subScores?.[scoreKey] ?? 0;
                                 return (
-                                  <div key={sub.key} className="flex items-center justify-between text-xs text-surface-600">
-                                    <span>{sub.name}</span>
-                                    <span className="font-mono font-semibold">{val ?? 0}/{sub.max}</span>
+                                  <div key={sub.key} className="flex items-center justify-between gap-2">
+                                    <span className="text-xs text-surface-600 flex-1">{sub.name}</span>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <input type="number" min={0} max={sub.max}
+                                        className="w-12 px-1.5 py-1 text-xs font-mono border border-surface-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 text-center"
+                                        value={val}
+                                        onChange={e => updateSubScore(scoreKey, Math.min(sub.max, Math.max(0, Number(e.target.value))))}
+                                      />
+                                      <span className="text-xs text-surface-400">/{sub.max}</span>
+                                    </div>
                                   </div>
                                 );
                               })}
-                              <div className="h-1 bg-surface-100 rounded-full overflow-hidden mt-2">
-                                <div className="h-full bg-primary-400 rounded-full"
-                                  style={{ width: `${(record.totalScore / focusCat.max) * 100}%` }} />
-                              </div>
                             </div>
-                            <p className="px-3 py-1.5 text-[10px] text-surface-400 bg-surface-50 border-t border-surface-100">
-                              점수 재입력은 [점검 조회/입력]에서 진행하세요.
-                            </p>
                           </div>
                         )}
                         {/* 특이사항 */}
@@ -717,7 +713,7 @@ export function DataManagement() {
                       <>
                         <p className="text-sm text-surface-600">점검자: <span className="font-medium text-surface-900">{record.inspector || "—"}</span></p>
                         {focusCat && (
-                          <p className="text-xs text-teal-700 bg-teal-50 border border-teal-100 rounded px-2 py-1">
+                          <p className="text-xs text-surface-600 bg-surface-50 border border-surface-200 rounded px-2 py-1">
                             중점: {focusCat.name} · {record.totalScore}/{focusCat.max}점
                           </p>
                         )}
@@ -738,7 +734,7 @@ export function DataManagement() {
                             <>
                               <button onClick={() => startEdit(record)}
                                 aria-label={`${record.departmentName} 점검 기록 수정`}
-                                className={`flex-1 py-2.5 bg-primary-50 text-primary-700 border border-primary-200 rounded text-sm font-medium hover:bg-primary-100 ${focusRing}`}>수정</button>
+                                className={`flex-1 py-2.5 bg-white text-surface-700 border border-surface-200 rounded text-sm font-medium hover:bg-surface-50 ${focusRing}`}>수정</button>
                               <button onClick={() => setPendingDeleteId(record.id)}
                                 aria-label={`${record.departmentName} 점검 기록 삭제`}
                                 className={`flex-1 py-2.5 bg-red-50 text-red-700 border border-red-200 rounded text-sm font-medium hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400`}>삭제</button>
@@ -835,33 +831,52 @@ export function DataManagement() {
                         </td>
 
                         {/* 중점사항 */}
-                        <td className="py-3 px-4 bg-teal-50/40 min-w-[180px]">
+                        <td className="py-3 px-4 min-w-[200px]">
                           {focusCat ? (
-                            <div className={`rounded px-2.5 py-2 space-y-1.5 ${hasSubScores ? "bg-teal-50 border border-teal-100" : "bg-amber-50 border border-amber-200"}`}>
-                              <div className="flex items-center gap-1.5">
-                                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-teal-100 text-teal-700 whitespace-nowrap">{focusCat.name}</span>
-                                <span className={`text-xs font-bold font-mono whitespace-nowrap ${hasSubScores ? "text-teal-800" : "text-amber-700"}`}>
-                                  {record.totalScore}/{focusCat.max}점
+                            <div className="rounded border border-surface-200 overflow-hidden">
+                              <div className="flex items-center justify-between px-2.5 py-1.5 bg-surface-50 border-b border-surface-100">
+                                <span className="text-[11px] font-semibold text-surface-700 whitespace-nowrap">{focusCat.name}</span>
+                                <span className="text-[11px] font-bold font-mono text-primary-600 whitespace-nowrap">
+                                  {isEditing
+                                    ? (focusCat.subCriteria.reduce((s, sub) =>
+                                        s + (editForm.subScores?.[`${focusCat.key}_${sub.key}`] ?? 0), 0))
+                                    : record.totalScore}/{focusCat.max}점
                                 </span>
                               </div>
-                              {hasSubScores ? (
-                                focusCat.subCriteria.map(sub => {
-                                  const val = record.subScores![`${focusCat.key}_${sub.key}`];
-                                  return (
-                                    <div key={sub.key} className="flex items-center gap-1.5">
-                                      <span className="text-[11px] text-teal-600 w-14 shrink-0 truncate">{sub.name}</span>
-                                      <div className="flex-1 h-1.5 bg-teal-100 rounded-full overflow-hidden min-w-[28px]"
-                                        role="progressbar" aria-valuenow={val} aria-valuemin={0} aria-valuemax={sub.max} aria-label={`${sub.name} 점수`}>
-                                        <div className="h-full bg-teal-400 rounded-full"
-                                          style={{ width: val != null ? `${(val / sub.max) * 100}%` : "0%" }} />
+                              <div className="px-2.5 py-2 space-y-1.5">
+                                {hasSubScores ? (
+                                  focusCat.subCriteria.map(sub => {
+                                    const scoreKey = `${focusCat.key}_${sub.key}`;
+                                    const val = record.subScores![scoreKey];
+                                    return (
+                                      <div key={sub.key} className="flex items-center gap-1.5">
+                                        <span className="text-[11px] text-surface-500 w-14 shrink-0 truncate">{sub.name}</span>
+                                        {isEditing ? (
+                                          <>
+                                            <input type="number" min={0} max={sub.max}
+                                              className="w-10 px-1 py-0.5 text-[11px] font-mono border border-surface-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500 text-center"
+                                              value={editForm.subScores?.[scoreKey] ?? val ?? 0}
+                                              onChange={e => updateSubScore(scoreKey, Math.min(sub.max, Math.max(0, Number(e.target.value))))}
+                                            />
+                                            <span className="text-[11px] text-surface-400">/{sub.max}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <div className="flex-1 h-1.5 bg-surface-100 rounded-full overflow-hidden min-w-[28px]"
+                                              role="progressbar" aria-valuenow={val} aria-valuemin={0} aria-valuemax={sub.max} aria-label={`${sub.name} 점수`}>
+                                              <div className="h-full bg-primary-400 rounded-full"
+                                                style={{ width: val != null ? `${(val / sub.max) * 100}%` : "0%" }} />
+                                            </div>
+                                            <span className="text-[11px] font-mono text-surface-600 font-semibold whitespace-nowrap">{val ?? "—"}/{sub.max}</span>
+                                          </>
+                                        )}
                                       </div>
-                                      <span className="text-[11px] font-mono text-teal-700 font-semibold whitespace-nowrap">{val ?? "—"}/{sub.max}</span>
-                                    </div>
-                                  );
-                                })
-                              ) : (
-                                <p className="text-[11px] text-amber-600">세부항목 없음 — 재입력 필요</p>
-                              )}
+                                    );
+                                  })
+                                ) : (
+                                  <p className="text-[11px] text-surface-400">세부항목 없음 — 재입력 필요</p>
+                                )}
+                              </div>
                             </div>
                           ) : <span className="text-surface-300 text-xs" aria-label="중점사항 없음">—</span>}
                         </td>
@@ -919,10 +934,10 @@ export function DataManagement() {
                             <div className="flex justify-end gap-2 items-center">
                               <button onClick={() => startEdit(record)}
                                 aria-label={`${record.departmentName} 점검 기록 수정`}
-                                className={`px-3 py-1.5 min-h-[36px] text-primary-600 bg-primary-50 border border-primary-200 rounded text-xs hover:bg-primary-100 ${focusRing}`}>수정</button>
+                                className={`px-3 py-1.5 min-h-[36px] text-surface-700 bg-white border border-surface-200 rounded text-xs hover:bg-surface-50 ${focusRing}`}>수정</button>
                               <button onClick={() => setPendingDeleteId(record.id)}
                                 aria-label={`${record.departmentName} 점검 기록 삭제`}
-                                className={`px-3 py-1.5 min-h-[36px] text-red-600 bg-red-50 border border-red-200 rounded text-xs hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400`}>삭제</button>
+                                className={`px-3 py-1.5 min-h-[36px] text-red-600 bg-white border border-surface-200 rounded text-xs hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-400`}>삭제</button>
                             </div>
                           )}
                         </td>
