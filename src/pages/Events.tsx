@@ -365,8 +365,9 @@ export function Events() {
 
       {displayEvents.length > 0 && (
         <div className="bg-white rounded border border-surface-200 overflow-hidden mt-8">
-          <div className="bg-surface-50 px-6 py-4 border-b border-surface-200">
-            <h2 className="text-lg font-bold text-surface-900">위원별 참여 현황 <span className="text-sm font-normal text-surface-500 ml-2">({filterMonth})</span></h2>
+          <div className="bg-surface-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-surface-200 flex items-center justify-between">
+            <h2 className="text-base sm:text-lg font-bold text-surface-900">위원별 참여 현황 <span className="text-sm font-normal text-surface-500 ml-2">({filterMonth})</span></h2>
+            <span className="sm:hidden text-[10px] text-surface-400">← 스크롤</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
@@ -396,7 +397,7 @@ export function Events() {
                         return (
                           <td key={evt.id} className="py-2 px-4 text-center">
                             {attended ? (
-                              <span className="inline-flex w-6 h-6 rounded bg-green-100 text-green-600 items-center justify-center font-bold text-xs mx-auto">
+                              <span className="inline-flex w-6 h-6 rounded bg-primary-100 text-primary-700 items-center justify-center font-bold text-xs mx-auto">
                                 O
                               </span>
                             ) : (

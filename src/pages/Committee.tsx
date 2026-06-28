@@ -143,7 +143,7 @@ export function Committee() {
             placeholder="이름·소속·역할..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="pl-7 w-44"
+            className="pl-7 w-full sm:w-44"
             aria-label="위원 검색"
           />
         </div>

@@ -228,7 +228,7 @@ export function Management() {
               </button>
             </div>
 
-            <div className="border border-surface-200 rounded overflow-hidden h-[500px] overflow-y-auto">
+            <div className="border border-surface-200 rounded overflow-hidden sm:max-h-[500px] overflow-y-auto">
               <table className="w-full text-sm text-left relative">
                 <thead className="bg-surface-50 text-surface-500 border-b border-surface-200 uppercase text-xs font-semibold sticky top-0 z-10">
                   <tr>

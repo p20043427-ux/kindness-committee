@@ -216,10 +216,9 @@ export function Monitoring() {
     const fk = getFocusForMonth(selectedDate.slice(0, 7));
     if (!fk) return undefined;
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-teal-200 bg-teal-50 text-xs text-teal-700">
-        <span aria-hidden>🎯</span>
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-surface-200 bg-surface-50 text-xs text-surface-700">
         <span className="font-medium">{Number(selectedDate.slice(5, 7))}월 중점사항:</span>
-        <span className="font-semibold">{categoryName(fk)}</span>
+        <span className="font-semibold text-primary-600">{categoryName(fk)}</span>
       </span>
     );
   })();
@@ -231,7 +230,20 @@ export function Monitoring() {
         description="이전 기록 조회 및 해당 일자 점검표를 개별 입력합니다."
         badge={focusBadge}
       >
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <DatePickerWithData
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+          />
+          <Select
+            value={globalInspector}
+            onChange={e => setGlobalInspector(e.target.value)}
+            className="flex-1 sm:flex-none sm:w-36"
+            aria-label="점검자 선택"
+          >
+            <option value="">전체 점검자</option>
+            {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+          </Select>
           <Button
             type="button"
             variant="secondary"
@@ -239,23 +251,10 @@ export function Monitoring() {
             leftIcon={<Download className="w-3.5 h-3.5" aria-hidden />}
             onClick={exportToCSV}
             isLoading={isExporting}
-            className="flex-shrink-0"
+            className="shrink-0"
           >
             CSV
           </Button>
-          <Select
-            value={globalInspector}
-            onChange={e => setGlobalInspector(e.target.value)}
-            className="flex-shrink-0 w-36"
-            aria-label="점검자 선택"
-          >
-            <option value="">점검자 (선택)</option>
-            {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
-          </Select>
-          <DatePickerWithData
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-          />
         </div>
       </PageHeader>
 
@@ -272,9 +271,9 @@ export function Monitoring() {
               <button
                 key={b.id}
                 onClick={() => setMobileActiveBuildingId(b.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded text-sm font-medium transition-colors ${
+                className={`flex-shrink-0 px-4 py-2.5 min-h-[44px] rounded text-sm font-medium transition-colors ${
                   mobileActiveBuildingId === b.id
-                    ? 'bg-surface-900 text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-white border border-surface-200 text-surface-600 hover:bg-surface-50'
                 }`}
               >

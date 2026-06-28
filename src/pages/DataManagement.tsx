@@ -958,7 +958,7 @@ export function DataManagement() {
               <nav aria-label="페이지 탐색" className="flex items-center gap-1">
                 <button onClick={() => updateParams({ page: String(safePage - 1) })}
                   disabled={safePage === 0} aria-label="이전 페이지"
-                  className={`p-2 rounded border border-surface-200 text-surface-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}>
+                  className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded border border-surface-200 text-surface-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}>
                   <ChevronLeft className="w-4 h-4" aria-hidden />
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i)
@@ -966,7 +966,7 @@ export function DataManagement() {
                   .map(i => (
                     <button key={i} onClick={() => updateParams({ page: String(i) })}
                       aria-label={`${i + 1}페이지`} aria-current={safePage === i ? "page" : undefined}
-                      className={`w-8 h-8 rounded text-xs font-medium ${focusRing} ${
+                      className={`min-h-[44px] min-w-[44px] rounded text-xs font-medium ${focusRing} ${
                         safePage === i
                           ? "bg-primary-600 text-white"
                           : "border border-surface-200 text-surface-600 hover:bg-surface-100"
@@ -974,7 +974,7 @@ export function DataManagement() {
                   ))}
                 <button onClick={() => updateParams({ page: String(safePage + 1) })}
                   disabled={safePage >= totalPages - 1} aria-label="다음 페이지"
-                  className={`p-2 rounded border border-surface-200 text-surface-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}>
+                  className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded border border-surface-200 text-surface-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}>
                   <ChevronRight className="w-4 h-4" aria-hidden />
                 </button>
               </nav>
@@ -1012,7 +1012,39 @@ export function DataManagement() {
             </div>
           </div>
 
-          <div className="bg-white rounded border border-surface-200 overflow-hidden">
+          {/* 집계 모바일 카드 */}
+          <div className="sm:hidden space-y-2">
+            {aggregateData.length === 0 ? (
+              <p className="py-8 text-center text-surface-500 bg-white rounded border border-surface-200">
+                {filterYear}년에 등록된 점검 데이터가 없습니다.
+              </p>
+            ) : aggregateData.map(row => (
+              <div key={row.departmentId} className="bg-white rounded border border-surface-200 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 bg-surface-50 border-b border-surface-100">
+                  <span className="font-semibold text-surface-900 text-sm">{row.departmentName}</span>
+                  <span className={`font-bold font-mono text-sm ${scoreBand(row.yearlyAvg, scoreMaxForBand)}`}>
+                    연평균 {row.yearlyAvg ?? "—"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 divide-x divide-y divide-surface-100">
+                  {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => {
+                    const val = row[`m${m}`];
+                    return (
+                      <div key={m} className="px-2 py-2 text-center">
+                        <p className="text-[10px] text-surface-400 mb-0.5">{m}월</p>
+                        {val !== null
+                          ? <span className={`text-xs font-mono font-semibold ${scoreBand(val, scoreMaxForBand)}`}>{val}</span>
+                          : <span className="text-xs text-surface-300">-</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 집계 데스크탑 테이블 */}
+          <div className="hidden sm:block bg-white rounded border border-surface-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-surface-50 text-surface-600 border-b border-surface-200 sticky top-0 z-10">
@@ -1078,3 +1110,4 @@ export function DataManagement() {
     </div>
   );
 }
+

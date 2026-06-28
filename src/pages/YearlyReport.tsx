@@ -264,7 +264,7 @@ export function YearlyReport() {
       </PageHeader>
 
       {/* ── KPI 카드 ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard label="총 점검 건수" accentColor={CHART_COLORS.primary}>
           <p className="text-2xl font-bold text-surface-900 mt-2 font-mono tabular-nums">
             {kpi.total}<span className="text-sm text-surface-400 ml-1 font-sans font-normal">건</span>
@@ -586,7 +586,7 @@ export function YearlyReport() {
               <CardTitle>월별 중점사항 운영 현황</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                 {monthlyData.map(m => {
                   const hasData = m.avg !== null;
                   return (

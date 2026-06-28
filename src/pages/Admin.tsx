@@ -293,17 +293,17 @@ export function Admin() {
                     <div
                       key={m.ym}
                       className={`flex items-center justify-between p-3 border rounded ${
-                        isCurrent ? "border-teal-300 bg-teal-50" : "border-surface-200 bg-surface-50"
+                        isCurrent ? "border-primary-300 bg-primary-50/30" : "border-surface-200 bg-surface-50"
                       }`}
                     >
-                      <span className={`text-sm font-bold ${isCurrent ? "text-teal-700" : "text-surface-700"}`}>
+                      <span className={`text-sm font-bold ${isCurrent ? "text-primary-700" : "text-surface-700"}`}>
                         {m.label}
-                        {isCurrent && <span className="ml-1 text-[10px] font-medium text-teal-500">이번 달</span>}
+                        {isCurrent && <span className="ml-1 text-[10px] font-medium text-primary-500">이번 달</span>}
                       </span>
                       <select
                         value={focusDraft[m.ym] || ""}
                         onChange={e => setMonthFocus(m.ym, e.target.value)}
-                        className="rounded border border-surface-300 px-2 py-1.5 text-sm bg-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none max-w-[60%]"
+                        className="rounded border border-surface-300 px-2 py-1.5 text-sm bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none max-w-[60%]"
                       >
                         <option value="">미지정</option>
                         {categories.map(c => (

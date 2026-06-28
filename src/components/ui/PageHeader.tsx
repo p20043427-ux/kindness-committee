@@ -11,16 +11,9 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, badge, children }: PageHeaderProps) {
   return (
-    <div
-      className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4"
-      style={{ borderBottom: "1px solid #D1D9E6" }}
-    >
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-surface-200">
       <div className="flex items-start gap-3 min-w-0">
-        <div
-          className="w-0.5 self-stretch rounded-full shrink-0 mt-0.5"
-          style={{ backgroundColor: "#1558A0" }}
-          aria-hidden="true"
-        />
+        <div className="w-0.5 self-stretch bg-primary-600 rounded-full shrink-0 mt-0.5" aria-hidden="true" />
         <div className="min-w-0">
           <h1 className="text-lg font-bold tracking-tight text-surface-900 leading-tight">
             {title}
@@ -32,7 +25,7 @@ export function PageHeader({ title, description, badge, children }: PageHeaderPr
         </div>
       </div>
       {children && (
-        <div className="flex items-center gap-2 shrink-0">{children}</div>
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">{children}</div>
       )}
     </div>
   );

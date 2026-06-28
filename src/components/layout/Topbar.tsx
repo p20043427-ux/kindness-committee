@@ -37,8 +37,7 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
   });
 
   return (
-    <header className="h-12 bg-white flex items-center justify-between px-5 shrink-0"
-      style={{ borderBottom: "1px solid #D1D9E6", borderTop: "2px solid #1558A0" }}>
+    <header className="h-12 bg-white flex items-center justify-between px-5 shrink-0 border-b border-surface-200 border-t-2 border-t-primary-600">
 
       {/* Left: breadcrumb */}
       <div className="flex items-center gap-2 min-w-0">
