@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, LabelList,
@@ -41,7 +41,7 @@ function avg(arr: number[]) {
 }
 
 function KpiCard({ label, accentColor, children }: {
-  label: string; accentColor: string; children: React.ReactNode;
+  label: string; accentColor: string; children: ReactNode;
 }) {
   return (
     <div className="bg-white border border-surface-200 rounded overflow-hidden">

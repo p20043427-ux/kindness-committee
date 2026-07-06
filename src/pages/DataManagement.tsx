@@ -396,9 +396,9 @@ export function DataManagement() {
         sub_scores:  editForm.subScores ?? null,
         status:      newStatus,
         updated_at:  nowIso,
-      }).eq("id", id);
+      }, { count: "exact" }).eq("id", id);
       if (editForm.updatedAt) query = query.eq("updated_at", editForm.updatedAt);
-      const { error, count } = await query.select("id", { count: "exact", head: true });
+      const { error, count } = await query;
       if (error) throw error;
       if (count === 0) {
         toast("다른 사용자가 이미 수정했습니다. 페이지를 새로고침 후 다시 시도해주세요.", "error");

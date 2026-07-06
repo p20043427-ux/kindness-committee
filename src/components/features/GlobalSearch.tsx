@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useNavigate } from "react-router";
 import { useOrganization } from "@/src/components/layout/OrganizationProvider";
 import { Search, Building2, LayoutGrid, X } from "lucide-react";
@@ -83,7 +83,7 @@ export function GlobalSearch() {
     close();
   };
 
-  const onKeyDown = (e: React.KeyboardEvent) => {
+  const onKeyDown = (e: ReactKeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setCursor(c => Math.min(c + 1, results.length - 1));

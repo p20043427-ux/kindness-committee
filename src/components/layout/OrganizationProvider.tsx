@@ -54,7 +54,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   /* 낙관적 업데이트 헬퍼 — DB 쓰기 실패 시 롤백 */
   async function optimisticBuilding<T>(
     update: (prev: Building[]) => Building[],
-    write: () => Promise<{ error: any }>,
+    write: () => PromiseLike<{ error: any }>,
     rollback: Building[]
   ) {
     setBuildings(update);
@@ -64,7 +64,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
   async function optimisticDept<T>(
     update: (prev: Department[]) => Department[],
-    write: () => Promise<{ error: any }>,
+    write: () => PromiseLike<{ error: any }>,
     rollback: Department[]
   ) {
     setDepartments(update);
