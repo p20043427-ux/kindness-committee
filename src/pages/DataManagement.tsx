@@ -424,7 +424,6 @@ export function DataManagement() {
   };
 
   const softDeleteRecord = (id: string) => {
-    setPendingDeleteId(null);
     setHiddenIds(prev => new Set([...prev, id]));
     const timer = setTimeout(() => {
       undoTimers.current.delete(id);
