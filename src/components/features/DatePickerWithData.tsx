@@ -87,12 +87,12 @@ export function DatePickerWithData({ selectedDate, onDateChange }: DatePickerWit
           <style>{`
             .rdp {
               --rdp-cell-size: 40px;
-              --rdp-accent-color: #3b82f6;
-              --rdp-background-color: #eff6ff; 
+              --rdp-accent-color: #0F5DAA;
+              --rdp-background-color: #EFF5FB;
               margin: 0;
             }
             .rdp-day_selected, .rdp-day_selected:focus-visible, .rdp-day_selected:hover {
-              background-color: #4f46e5;
+              background-color: #0F5DAA;
               color: white;
             }
             .day-with-data::after {
@@ -100,7 +100,7 @@ export function DatePickerWithData({ selectedDate, onDateChange }: DatePickerWit
               display: block;
               width: 6px;
               height: 6px;
-              background-color: #10b981;
+              background-color: #2D9D9F;
               border-radius: 50%;
               position: absolute;
               bottom: 4px;

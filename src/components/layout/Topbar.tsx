@@ -81,10 +81,10 @@ export function Topbar({ onToggleMenu }: TopbarProps) {
 
         {/* Status */}
         <div className="flex items-center gap-1.5 h-7 px-2.5 rounded border text-xs font-medium"
-          style={{ backgroundColor: "#F0FDF4", borderColor: "#BBF7D0", color: "#15803D" }}>
+          style={{ backgroundColor: "#E7F6EE", borderColor: "#C7ECDA", color: "#14713F" }}>
           <span className="relative flex w-1.5 h-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ backgroundColor: "#22C55E" }} />
-            <span className="relative inline-flex rounded-full w-1.5 h-1.5" style={{ backgroundColor: "#22C55E" }} />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ backgroundColor: "#1E9E5A" }} />
+            <span className="relative inline-flex rounded-full w-1.5 h-1.5" style={{ backgroundColor: "#1E9E5A" }} />
           </span>
           <span className="hidden sm:inline">정상운영</span>
         </div>

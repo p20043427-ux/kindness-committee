@@ -28,12 +28,12 @@ const DEFAULT_COLOR = CHART_COLORS.neutral;
 
 const TOOLTIP_STYLE = {
   borderRadius: "4px",
-  border: "1px solid #D1D9E6",
+  border: "1px solid #E3E9F0",
   fontSize: "12px",
   padding: "8px 12px",
 } as const;
 
-const GRID_COLOR = "#E7ECF3";
+const GRID_COLOR = "#EEF2F7";
 
 function avg(arr: number[]) {
   if (!arr.length) return null;
@@ -433,7 +433,7 @@ export function YearlyReport() {
                     <XAxis dataKey="shortMonth" axisLine={false} tickLine={false} tick={{ fill: "#64748B", fontSize: 12 }} tickFormatter={v => `${v}월`} />
                     <YAxis domain={[0, scoreMax]} axisLine={false} tickLine={false} tick={{ fill: "#64748B", fontSize: 12 }} />
                     <Tooltip
-                      cursor={{ fill: "#F4F6F9" }}
+                      cursor={{ fill: "#F6F8FB" }}
                       contentStyle={TOOLTIP_STYLE}
                       formatter={(v: any, _: any, p: any) => [v !== null ? `${v}점` : "—", p.payload.focusName]}
                       labelFormatter={(label) => {
@@ -450,7 +450,7 @@ export function YearlyReport() {
                         style={{ fontSize: 11, fill: "#64748B", fontWeight: 600 }}
                       />
                       {monthlyData.map((d, i) => (
-                        <Cell key={i} fill={d.avg !== null ? d.color : "#D1D9E6"} opacity={d.avg !== null ? 1 : 0.4} />
+                        <Cell key={i} fill={d.avg !== null ? d.color : "#E3E9F0"} opacity={d.avg !== null ? 1 : 0.4} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -508,7 +508,7 @@ export function YearlyReport() {
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#64748B", fontSize: 13 }} />
                       <YAxis domain={[0, scoreMax]} axisLine={false} tickLine={false} tick={{ fill: "#64748B", fontSize: 12 }} />
                       <Tooltip
-                        cursor={{ fill: "#F4F6F9" }}
+                        cursor={{ fill: "#F6F8FB" }}
                         contentStyle={TOOLTIP_STYLE}
                         formatter={(v: any, _: any, p: any) => [`${v}점 (${p.payload.count}건)`, "평균 점수"]}
                       />

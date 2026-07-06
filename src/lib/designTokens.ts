@@ -13,22 +13,22 @@ export const CATEGORY_COLORS: Record<string, string> = {
   environment: "#6040A0",  // muted indigo-purple
 };
 
-/** Sequential clinical-blue scale for building/group comparisons. */
+/** Sequential Hospital Blue scale for building/group comparisons. */
 export const BUILDING_COLORS = [
-  "#0F4888",  // deepest
-  "#155CA8",  // primary clinical blue
-  "#1E6DC5",
-  "#2A83D8",
-  "#3A9AE5",
+  "#0F3053",  // deepest
+  "#124E89",  // primary-700
+  "#0F5DAA",  // primary-600 — brand Hospital Blue
+  "#2270B4",
+  "#4C8CCB",
 ] as const;
 
 /** Named chart palette for single-series and reference elements. */
 export const CHART_COLORS = {
-  primary:   "#1558A0",  // clinical blue — line charts, single series
-  secondary: "#16805A",  // clinical green — reference line
-  warning:   "#B45309",  // muted amber — attention
-  danger:    "#B83030",  // clinical crimson — critical
-  neutral:   "#8899B0",  // cool blue-grey — no-data / unassigned
+  primary:   "#0F5DAA",  // Hospital Blue — line charts, single series
+  secondary: "#248688",  // brand Mint — reference line
+  warning:   "#B05E07",  // brand orange (text-safe) — attention
+  danger:    "#B02E2C",  // brand danger (text-safe) — critical
+  neutral:   "#8493A5",  // surface-500 — no-data / unassigned
   purple:    "#6040A0",  // muted purple
 } as const;
 
