@@ -6,28 +6,86 @@
   --font-sans: "Pretendard", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  --color-primary-50: var(--color-indigo-50);
-  --color-primary-100: var(--color-indigo-100);
-  --color-primary-200: var(--color-indigo-200);
-  --color-primary-300: var(--color-indigo-300);
-  --color-primary-400: var(--color-indigo-400);
-  --color-primary-500: var(--color-indigo-500);
-  --color-primary-600: var(--color-indigo-600);
-  --color-primary-700: var(--color-indigo-700);
-  --color-primary-800: var(--color-indigo-800);
-  --color-primary-900: var(--color-indigo-900);
+  /* Primary — Hospital Blue (좋은병원들 브랜드, HI 심볼 계열) */
+  --color-primary-50: #EFF5FB;
+  --color-primary-100: #DCE9F7;
+  --color-primary-200: #B7D2EE;
+  --color-primary-300: #85B2E0;
+  --color-primary-400: #4C8CCB;
+  --color-primary-500: #2270B4;
+  --color-primary-600: #0F5DAA;
+  --color-primary-700: #124E89;
+  --color-primary-800: #113F6D;
+  --color-primary-900: #0F3053;
 
-  --color-surface-50: var(--color-slate-50);
-  --color-surface-100: var(--color-slate-100);
-  --color-surface-200: var(--color-slate-200);
-  --color-surface-300: var(--color-slate-300);
-  --color-surface-400: var(--color-slate-400);
-  --color-surface-500: var(--color-slate-500);
-  --color-surface-600: var(--color-slate-600);
-  --color-surface-700: var(--color-slate-700);
-  --color-surface-800: var(--color-slate-800);
-  --color-surface-900: var(--color-slate-900);
-  --color-surface-950: var(--color-slate-950);
+  /* Surface — Cool Gray (블루 틴트) */
+  --color-surface-50: #F6F8FB;
+  --color-surface-100: #EEF2F7;
+  --color-surface-200: #E3E9F0;
+  --color-surface-300: #CDD6E1;
+  --color-surface-400: #A7B3C2;
+  --color-surface-500: #8493A5;
+  --color-surface-600: #64748B;
+  --color-surface-700: #475569;
+  --color-surface-800: #2C3A4D;
+  --color-surface-900: #16233A;
+  --color-surface-950: #0E1729;
+
+  /* Teal → Mint (HI 중심 컬러, 중점사항/포커스 강조) */
+  --color-teal-50: #ECF8F8;
+  --color-teal-100: #D4EFEF;
+  --color-teal-200: #A8DFDF;
+  --color-teal-300: #74CBCB;
+  --color-teal-400: #45B3B4;
+  --color-teal-500: #2D9D9F;
+  --color-teal-600: #248688;
+  --color-teal-700: #1E6F71;
+  --color-teal-800: #195C5D;
+  --color-teal-900: #144A4B;
+
+  /* Success (정상) */
+  --color-green-50: #E7F6EE;
+  --color-green-100: #C7ECDA;
+  --color-green-200: #96DBB9;
+  --color-green-300: #63C797;
+  --color-green-400: #3BB37B;
+  --color-green-500: #24AA68;
+  --color-green-600: #1E9E5A;
+  --color-green-700: #14713F;
+  --color-green-800: #0F5A31;
+  --color-green-900: #0B4425;
+
+  /* Warning (주의) — 브랜드 오렌지 (요양병원 계열) */
+  --color-amber-50: #FEF3E4;
+  --color-amber-100: #FDE7C9;
+  --color-amber-200: #FBCF93;
+  --color-amber-300: #F9B76A;
+  --color-amber-400: #F89F45;
+  --color-amber-500: #F78B1E;
+  --color-amber-600: #DA7712;
+  --color-amber-700: #B05E07;
+  --color-amber-800: #8C4A06;
+  --color-amber-900: #663605;
+
+  /* Danger (긴급) */
+  --color-red-50: #FCEDEC;
+  --color-red-100: #F8D6D5;
+  --color-red-200: #F0AEAC;
+  --color-red-300: #E9807D;
+  --color-red-400: #E36461;
+  --color-red-500: #DE4A47;
+  --color-red-600: #C93E3B;
+  --color-red-700: #B02E2C;
+  --color-red-800: #8C2422;
+  --color-red-900: #691B1A;
+
+  /* Shadow — 블루 틴트, 낮고 부드럽게 */
+  --shadow-xs: 0 1px 2px rgba(15, 48, 83, 0.06);
+  --shadow-sm: 0 1px 3px rgba(15, 48, 83, 0.08), 0 1px 2px rgba(15, 48, 83, 0.04);
+  --shadow-md: 0 4px 12px rgba(15, 48, 83, 0.08), 0 1px 3px rgba(15, 48, 83, 0.05);
+  --shadow-lg: 0 12px 32px rgba(15, 48, 83, 0.12), 0 2px 6px rgba(15, 48, 83, 0.06);
+  --shadow-xl: 0 20px 48px rgba(15, 48, 83, 0.16), 0 4px 10px rgba(15, 48, 83, 0.08);
+  --shadow-2xl: 0 24px 64px rgba(15, 48, 83, 0.2), 0 6px 14px rgba(15, 48, 83, 0.1);
 }
 
 body {

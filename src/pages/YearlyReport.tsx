@@ -391,15 +391,15 @@ export function YearlyReport() {
                         contentStyle={{ borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "13px" }}
                         formatter={(v: any, _: any, p: any) => [`${v}점 (${p.payload.count}건)`, "평균 점수"]}
                       />
-                      <Bar dataKey="avg" maxBarSize={64} radius={[4, 4, 0, 0]} fill="#6366f1">
+                      <Bar dataKey="avg" maxBarSize={64} radius={[4, 4, 0, 0]} fill="#2270B4">
                         <LabelList
                           dataKey="avg"
                           position="top"
                           formatter={(v: any) => `${v}점`}
-                          style={{ fontSize: 12, fill: "#4f46e5", fontWeight: 700 }}
+                          style={{ fontSize: 12, fill: "#0F5DAA", fontWeight: 700 }}
                         />
                         {buildingData.map((_, i) => (
-                          <Cell key={i} fill={["#6366f1", "#10b981", "#f59e0b"][i % 3]} />
+                          <Cell key={i} fill={["#2270B4", "#1E9E5A", "#F78B1E"][i % 3]} />
                         ))}
                       </Bar>
                     </BarChart>
